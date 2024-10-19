@@ -26,7 +26,7 @@ class MyFuncTracker(object):
             if self.do_track:
                 inputs = args
                 output = func(*args, **kwargs)
-                self.call_tape.append((inputs, output, func.__name__))
+                self.call_tape.append((inputs, output, func))
                 return output
             else:
                 return func(*args, **kwargs)
@@ -77,5 +77,5 @@ with my_func_tracker.track_func(True):
     z = x * z
 
 # extract computation history
-for call_inputs, call_output, func_name in my_func_tracker.call_tape:
-    print(f"Function: {func_name}, Inputs: {call_inputs}, Output: {call_output}")
+for call_inputs, call_output, func in my_func_tracker.call_tape:
+    print(f"Function: {func.__name__}, Inputs: {call_inputs}, Output: {call_output}")
