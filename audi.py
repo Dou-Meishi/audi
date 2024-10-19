@@ -69,8 +69,38 @@ def _add(a: MyTensor, b: MyTensor) -> MyTensor:
 
 
 @my_func_tracker
+def _add_vjp(
+    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+) -> list[MyTensor]:
+    return (grad_outputs[0] for _ in inputs)
+
+
+@my_func_tracker
+def _add_jvp(
+    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+) -> list[MyTensor]:
+    return (grad_outputs[0] for _ in inputs)
+
+
+@my_func_tracker
 def _multiply(a: MyTensor, b: MyTensor) -> MyTensor:
     return MyTensor(a.value * b.value)
+
+
+@my_func_tracker
+def _multiply_jvp(
+    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+) -> list[MyTensor]:
+    (a, b), (grad,) = inputs, grad_outputs
+    return (b * grad, a * grad)
+
+
+@my_func_tracker
+def _multiply_vjp(
+    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+) -> list[MyTensor]:
+    (a, b), (grad,) = inputs, grad_outputs
+    return (b * grad, a * grad)
 
 
 class MyFunction(object):
@@ -86,8 +116,8 @@ class MyFunction(object):
         return self.func.__name__
 
 
-add = MyFunction(_add)
-multiply = MyFunction(_multiply)
+add = MyFunction(_add, func_vjp=_add_vjp, func_jvp=_add_jvp)
+multiply = MyFunction(_multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp)
 
 
 def main():
