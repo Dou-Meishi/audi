@@ -1,3 +1,4 @@
+import functools
 from contextlib import contextmanager
 
 
@@ -15,6 +16,7 @@ class MyFuncTracker(object):
 
     def __call__(self, func):
         """Wrap the function. Track inputs and outputs in `self.call_tape`."""
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if self.do_track:
                 inputs = args
