@@ -1,3 +1,6 @@
+from contextlib import contextmanager
+
+
 class MyFuncTracker(object):
     """A decorator class to track function inputs and outputs.
 
@@ -21,6 +24,14 @@ class MyFuncTracker(object):
             else:
                 return func(*args, **kwargs)
         return wrapper
+
+    @contextmanager
+    def track_func(self, do_track):
+        try:
+            self.do_track = do_track
+            yield
+        finally:
+            self.do_track = False
 
 # initialize a global function tracker
 my_func_tracker = MyFuncTracker(do_track=True)
@@ -52,11 +63,10 @@ x = MyTensor(1.)
 y = MyTensor(2.)
 
 my_func_tracker.reset()
-my_func_tracker.do_track = True
-# do computations and track
-z = x + y
-z = x * z
-my_func_tracker.do_track = False
+with my_func_tracker.track_func(True):
+    # do computations and track
+    z = x + y
+    z = x * z
 
 # extract computation history
 for call_inputs, call_output, func_name in my_func_tracker.call_tape:
