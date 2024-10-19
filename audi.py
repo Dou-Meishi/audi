@@ -72,15 +72,22 @@ class MyTensor(object):
         return MyTensor(new_value)
 
 
-x = MyTensor(1.0)
-y = MyTensor(2.0)
+def main():
+    x = MyTensor(1.0)
+    y = MyTensor(2.0)
 
-my_func_tracker.reset()
-with my_func_tracker.track_func(True):
-    # do computations and track
-    z = x + y
-    z = x * z
+    my_func_tracker.reset()
+    with my_func_tracker.track_func(True):
+        # do computations and track
+        z = x + y
+        z = x * z
 
-# extract computation history
-for call_inputs, call_output, func in my_func_tracker.call_tape:
-    print(f"Function: {func.__name__}, Inputs: {call_inputs}, Output: {call_output}")
+    # extract computation history
+    for call_inputs, call_output, func in my_func_tracker.call_tape:
+        print(
+            f"Function: {func.__name__}, Inputs: {call_inputs}, Output: {call_output}"
+        )
+
+
+if __name__ == "__main__":
+    main()
