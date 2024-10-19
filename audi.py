@@ -11,6 +11,7 @@ class MyFuncTracker(object):
     Args:
         do_track (bool): A boolean flag to determine whether tracking is enabled.
     """
+
     def __init__(self, do_track: bool):
         self.do_track = do_track
         self.reset()
@@ -21,6 +22,7 @@ class MyFuncTracker(object):
 
     def __call__(self, func):
         """Wrap the function to track inputs and outputs in `self.call_tape`."""
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if self.do_track:
@@ -30,6 +32,7 @@ class MyFuncTracker(object):
                 return output
             else:
                 return func(*args, **kwargs)
+
         return wrapper
 
     @contextmanager
@@ -41,6 +44,7 @@ class MyFuncTracker(object):
         finally:
             self.do_track = False
 
+
 # initialize a global function tracker
 my_func_tracker = MyFuncTracker(do_track=True)
 
@@ -48,6 +52,7 @@ my_func_tracker = MyFuncTracker(do_track=True)
 @my_func_tracker
 def Add(a, b):
     return a + b
+
 
 @my_func_tracker
 def Multiply(a, b):
@@ -67,8 +72,8 @@ class MyTensor(object):
         return MyTensor(new_value)
 
 
-x = MyTensor(1.)
-y = MyTensor(2.)
+x = MyTensor(1.0)
+y = MyTensor(2.0)
 
 my_func_tracker.reset()
 with my_func_tracker.track_func(True):
