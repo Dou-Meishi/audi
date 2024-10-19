@@ -49,27 +49,45 @@ class MyFuncTracker(object):
 my_func_tracker = MyFuncTracker(do_track=True)
 
 
-@my_func_tracker
-def Add(a, b):
-    return a + b
-
-
-@my_func_tracker
-def Multiply(a, b):
-    return a * b
-
-
 class MyTensor(object):
     def __init__(self, value):
         self.value = value
 
     def __add__(self, other):
-        new_value = Add(self.value, other.value)
-        return MyTensor(new_value)
+        return add(self, other)
 
     def __mul__(self, other):
-        new_value = Multiply(self.value, other.value)
-        return MyTensor(new_value)
+        return multiply(self, other)
+
+    def __repr__(self):
+        return repr(self.value)
+
+
+@my_func_tracker
+def _add(a: MyTensor, b: MyTensor) -> MyTensor:
+    return MyTensor(a.value + b.value)
+
+
+@my_func_tracker
+def _multiply(a: MyTensor, b: MyTensor) -> MyTensor:
+    return MyTensor(a.value * b.value)
+
+
+class MyFunction(object):
+    def __init__(self, func, func_vjp=None, func_jvp=None):
+        self.func = func
+        self.vjp = func_vjp
+        self.jvp = func_jvp
+
+    def __call__(self, *args, **kws):
+        return self.func(*args, **kws)
+
+    def name(self) -> str:
+        return self.func.__name__
+
+
+add = MyFunction(_add)
+multiply = MyFunction(_multiply)
 
 
 def main():
