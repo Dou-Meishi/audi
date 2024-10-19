@@ -6,16 +6,21 @@ class MyFuncTracker(object):
     """A decorator class to track function inputs and outputs.
 
     Store recorded calls in attribute `call_tape`, a list of tuples
-    look like (inputs_k, outputs_k, func_k)."""
+    representing (inputs_k, outputs_k, func_k).
+
+    Args:
+        do_track (bool): A boolean flag to determine whether tracking is enabled.
+    """
     def __init__(self, do_track: bool):
         self.do_track = do_track
         self.reset()
 
     def reset(self):
+        """Reset the call tape to empty."""
         self.call_tape = []
 
     def __call__(self, func):
-        """Wrap the function. Track inputs and outputs in `self.call_tape`."""
+        """Wrap the function to track inputs and outputs in `self.call_tape`."""
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if self.do_track:
@@ -28,7 +33,8 @@ class MyFuncTracker(object):
         return wrapper
 
     @contextmanager
-    def track_func(self, do_track):
+    def track_func(self, do_track: bool):
+        """Context manager to enable or disable tracking within a block."""
         try:
             self.do_track = do_track
             yield
