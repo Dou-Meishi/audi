@@ -77,6 +77,11 @@ class MyTensor(object):
             other = MyTensor(other)
         return add(self, other)
 
+    def __radd__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
+        return add(self, other)
+
     def __mul__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
@@ -162,7 +167,7 @@ def reverseAD(
 
         # accumulate grad
         for x, grad in zip(k_inputs, grad_inputs):
-            x.grad = grad + x.grad
+            x.grad += grad
 
     return [x.grad for x in inputs]
 
