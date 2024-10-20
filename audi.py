@@ -152,6 +152,7 @@ def reverseAD(
     Gradients are accumulated in tensor's `grad` attribute, which is
     zero by default. However, this function does not check whether
     `grad` is zero or not. It simply accumulates all gradient in it."""
+    my_func_tracker.reset()
     with my_func_tracker.track_func(True):
         # forward pass
         y = f(*inputs)
@@ -182,7 +183,6 @@ def main():
     a = MyTensor(1.0)
     b = MyTensor(2.0)
 
-    my_func_tracker.reset()
     reverseAD(simple_function, [a, b], MyTensor(1.0))
 
     # extract computation history
