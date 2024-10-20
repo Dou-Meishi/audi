@@ -6,12 +6,11 @@ from contextlib import contextmanager
 class MyFunction(object):
     """Functions with vjp and jvp as attributes."""
 
-    def __init__(self, func, func_vjp=None, func_jvp=None):
+    def __init__(self, name, func, func_vjp=None, func_jvp=None):
+        self.name = name
         self.func = func
         self.vjp = func_vjp
         self.jvp = func_jvp
-
-        self.name = func.__name__
 
     def __call__(self, *args, **kws):
         return self.func(*args, **kws)
@@ -121,8 +120,8 @@ def _multiply_vjp(
     return (b * grad_outputs, a * grad_outputs)
 
 
-add = MyFunction(_add, func_vjp=_add_vjp, func_jvp=_add_jvp)
-multiply = MyFunction(_multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp)
+add = MyFunction("Add", _add, func_vjp=_add_vjp, func_jvp=_add_jvp)
+multiply = MyFunction("Multiply", _multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp)
 
 
 def reverseAD(
