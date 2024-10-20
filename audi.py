@@ -3,8 +3,23 @@ import functools
 from contextlib import contextmanager
 
 
+class MyFunction(object):
+    """Functions with vjp and jvp as attributes."""
+
+    def __init__(self, func, func_vjp=None, func_jvp=None):
+        self.func = func
+        self.vjp = func_vjp
+        self.jvp = func_jvp
+
+        self.name = func.__name__
+
+    def __call__(self, *args, **kws):
+        return self.func(*args, **kws)
+
+
 class MyFuncTracker(object):
     """A decorator class to track function inputs and outputs.
+    Designed for MyFunction class.
 
     Store recorded calls in attribute `call_tape`, a list of tuples
     representing (inputs_k, outputs_k, func_k).
@@ -22,17 +37,18 @@ class MyFuncTracker(object):
         self.call_tape = []
 
     def __call__(self, func):
-        """Wrap the function to track inputs and outputs in `self.call_tape`."""
+        """Wrap the function to track inputs and outputs in `self.call_tape`.
+        Expect func receive self as its first argument."""
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(objself, *args, **kwargs):
             if self.do_track:
-                inputs = args[1:]
-                output = func(*args, **kwargs)
-                self.call_tape.append((inputs, output, args[0]))
+                inputs = args
+                output = func(objself, *args, **kwargs)
+                self.call_tape.append((inputs, output, objself))
                 return output
             else:
-                return func(*args, **kwargs)
+                return func(objself, *args, **kwargs)
 
         return wrapper
 
@@ -48,6 +64,8 @@ class MyFuncTracker(object):
 
 # initialize a global function tracker
 my_func_tracker = MyFuncTracker(do_track=True)
+# apply it to MyFunction class
+MyFunction.__call__ = my_func_tracker(MyFunction.__call__)
 
 
 class MyTensor(object):
@@ -101,20 +119,6 @@ def _multiply_vjp(
 ) -> list[MyTensor]:
     a, b = inputs
     return (b * grad_outputs, a * grad_outputs)
-
-
-class MyFunction(object):
-    def __init__(self, func, func_vjp=None, func_jvp=None):
-        self.func = func
-        self.vjp = func_vjp
-        self.jvp = func_jvp
-
-    @my_func_tracker
-    def __call__(self, *args, **kws):
-        return self.func(*args, **kws)
-
-    def name(self) -> str:
-        return self.func.__name__
 
 
 add = MyFunction(_add, func_vjp=_add_vjp, func_jvp=_add_jvp)
