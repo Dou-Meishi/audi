@@ -154,23 +154,25 @@ def reverseAD(
     `grad` is zero or not. It simply accumulates all gradient in it."""
     my_func_tracker.reset()
     with my_func_tracker.track_func(True):
-        # forward pass
+        # do computations and track
         y = f(*inputs)
 
-    # extract computational graph
+    # extract computation history
     tape = my_func_tracker.call_tape
+    # backpropagate gradient starting at y
+    reverseAD_along_tape(y, tape, v)
+    return [x.grad for x in inputs]
 
-    # backward pass
+
+def reverseAD_along_tape(y, call_tape, v):
+    """Backpropagate gradient starting at y. Initially y.grad is set to v."""
     y.grad = v
-    for k_inputs, k_outputs, k_phi in reversed(tape):
+    for k_inputs, k_outputs, k_phi in reversed(call_tape):
         # chain rule
         grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.grad)
-
         # accumulate grad
         for x, grad in zip(k_inputs, grad_inputs):
             x.grad += grad
-
-    return [x.grad for x in inputs]
 
 
 def simple_function(a, b):
@@ -185,12 +187,12 @@ def main():
 
     reverseAD(simple_function, [a, b], MyTensor(1.0))
 
-    # extract computation history
-    for call_inputs, call_output, func in my_func_tracker.call_tape:
-        print(f"Function: {func.name}, Inputs: {call_inputs}, Output: {call_output}")
-
     print(f"Gradient of a: {a.grad}")
     print(f"Gradient of b: {b.grad}")
+
+    # examine computation history
+    for call_inputs, call_output, func in my_func_tracker.call_tape:
+        print(f"Function: {func.name}, Inputs: {call_inputs}, Output: {call_output}")
 
 
 if __name__ == "__main__":
