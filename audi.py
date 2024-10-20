@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import functools
 from contextlib import contextmanager
 
@@ -26,9 +27,9 @@ class MyFuncTracker(object):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             if self.do_track:
-                inputs = args
+                inputs = args[1:]
                 output = func(*args, **kwargs)
-                self.call_tape.append((inputs, output, func))
+                self.call_tape.append((inputs, output, args[0]))
                 return output
             else:
                 return func(*args, **kwargs)
@@ -50,57 +51,56 @@ my_func_tracker = MyFuncTracker(do_track=True)
 
 
 class MyTensor(object):
-    def __init__(self, value):
+    def __init__(self, value, grad=0):
         self.value = value
+        self.grad = grad
 
     def __add__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
         return add(self, other)
 
     def __mul__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
         return multiply(self, other)
 
     def __repr__(self):
         return repr(self.value)
 
 
-@my_func_tracker
 def _add(a: MyTensor, b: MyTensor) -> MyTensor:
     return MyTensor(a.value + b.value)
 
 
-@my_func_tracker
 def _add_vjp(
-    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return (grad_outputs[0] for _ in inputs)
+    return (grad_outputs for _ in inputs)
 
 
-@my_func_tracker
 def _add_jvp(
-    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return (grad_outputs[0] for _ in inputs)
+    return (grad_outputs for _ in inputs)
 
 
-@my_func_tracker
 def _multiply(a: MyTensor, b: MyTensor) -> MyTensor:
     return MyTensor(a.value * b.value)
 
 
-@my_func_tracker
 def _multiply_jvp(
-    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    (a, b), (grad,) = inputs, grad_outputs
-    return (b * grad, a * grad)
+    a, b = inputs
+    return (b * grad_outputs, a * grad_outputs)
 
 
-@my_func_tracker
 def _multiply_vjp(
-    inputs: list[MyTensor], outputs: list[MyTensor], grad_outputs: list[MyTensor]
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    (a, b), (grad,) = inputs, grad_outputs
-    return (b * grad, a * grad)
+    a, b = inputs
+    return (b * grad_outputs, a * grad_outputs)
 
 
 class MyFunction(object):
@@ -109,6 +109,7 @@ class MyFunction(object):
         self.vjp = func_vjp
         self.jvp = func_jvp
 
+    @my_func_tracker
     def __call__(self, *args, **kws):
         return self.func(*args, **kws)
 
@@ -120,21 +121,68 @@ add = MyFunction(_add, func_vjp=_add_vjp, func_jvp=_add_jvp)
 multiply = MyFunction(_multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp)
 
 
+def reverseAD(
+    f: Callable[[list[MyTensor]], MyTensor],
+    inputs: list[MyTensor],
+    v: MyTensor,
+) -> list[MyTensor]:
+    """Use reverse-mode AD to compute the vector-Jacobian product of f.
+    Return the gradient of dot(f, v) evaluated at inputs.
+
+    Args
+    ----
+    - `f`: The function to be differentiated.
+
+    - `inputs`: Inputs of `f`.
+
+    - `v`: Any tensor matches the dim of `f`. Default to all one tensor.
+           In the default case, this function effectively differentiates
+           the sum of f's components.
+
+    Note
+    ----
+    Gradients are accumulated in tensor's `grad` attribute, which is
+    zero by default. However, this function does not check whether
+    `grad` is zero or not. It simply accumulates all gradient in it."""
+    with my_func_tracker.track_func(True):
+        # forward pass
+        y = f(*inputs)
+
+    # extract computational graph
+    tape = my_func_tracker.call_tape
+
+    # backward pass
+    y.grad = v
+    for k_inputs, k_outputs, k_phi in reversed(tape):
+        # chain rule
+        grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.grad)
+
+        # accumulate grad
+        for x, grad in zip(k_inputs, grad_inputs):
+            x.grad = grad + x.grad
+
+    return [x.grad for x in inputs]
+
+
+def simple_function(a, b):
+    z = a + b
+    z = a * z
+    return z
+
+
 def main():
-    x = MyTensor(1.0)
-    y = MyTensor(2.0)
+    a = MyTensor(1.0)
+    b = MyTensor(2.0)
 
     my_func_tracker.reset()
-    with my_func_tracker.track_func(True):
-        # do computations and track
-        z = x + y
-        z = x * z
+    reverseAD(simple_function, [a, b], MyTensor(1.0))
 
     # extract computation history
     for call_inputs, call_output, func in my_func_tracker.call_tape:
-        print(
-            f"Function: {func.__name__}, Inputs: {call_inputs}, Output: {call_output}"
-        )
+        print(f"Function: {func.name}, Inputs: {call_inputs}, Output: {call_output}")
+
+    print(f"Gradient of a: {a.grad}")
+    print(f"Gradient of b: {b.grad}")
 
 
 if __name__ == "__main__":
