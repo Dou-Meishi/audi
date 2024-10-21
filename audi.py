@@ -87,6 +87,11 @@ class MyTensor(object):
             other = MyTensor(other)
         return multiply(self, other)
 
+    def __rmul__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
+        return multiply(self, other)
+
     def __repr__(self):
         return repr(self.value)
 
