@@ -97,6 +97,11 @@ class MyTensor(object):
     def __repr__(self):
         return repr(self.value)
 
+    def dot(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
+        return dot(self, other)
+
 
 def _add(a: MyTensor, b: MyTensor) -> MyTensor:
     return MyTensor(a.value + b.value)
@@ -132,8 +137,26 @@ def _multiply_vjp(
     return (b * grad_outputs, a * grad_outputs)
 
 
+def _dot(a: MyTensor, b: MyTensor) -> MyTensor:
+    return MyTensor(a.value.dot(b.value))
+
+def _dot_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    a, b = inputs
+    return b * grad_outputs, a * grad_outputs
+
+
+def _dot_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    a, b = inputs
+    return b.dot(grad_outputs), a.dot(grad_outputs)
+
+
 add = MyFunction("Add", _add, func_vjp=_add_vjp, func_jvp=_add_jvp)
 multiply = MyFunction("Multiply", _multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp)
+dot = MyFunction("Dot", _dot, func_vjp=_dot_vjp, func_jvp=_dot_jvp)
 
 
 def reverseAD(
