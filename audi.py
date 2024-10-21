@@ -194,15 +194,17 @@ def test_f1_vjp(a, b, v):
 
 
 def main():
-    a = MyTensor(1.0)
-    b = MyTensor(2.0)
-    v = MyTensor(1.0)
+    a = MyTensor(np.random.randn())
+    b = MyTensor(np.random.randn())
+    v = MyTensor(np.random.randn())
 
     grad_a, grad_b = reverseAD(test_f1, [a, b], v)
-    expected_grad_a, expected_grad_b = test_f1_vjp(a.value, b.value, v.value)
+    expected_grad_a, expected_grad_b = test_f1_vjp(a, b, v)
+    match_a = np.allclose(grad_a.value, expected_grad_a.value)
+    match_b = np.allclose(grad_b.value, expected_grad_b.value)
 
-    print(f"Gradient of a: {grad_a}. Expected value: {expected_grad_a}")
-    print(f"Gradient of b: {grad_b}. Expected value: {expected_grad_b}")
+    print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
+    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # examine computation history
     # for call_inputs, call_output, func in my_func_tracker.call_tape:
