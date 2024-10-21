@@ -2,6 +2,8 @@ from collections.abc import Callable
 import functools
 from contextlib import contextmanager
 
+import numpy as np
+
 
 class MyFunction(object):
     """Functions with vjp and jvp as attributes."""
@@ -69,7 +71,7 @@ MyFunction.__call__ = my_func_tracker(MyFunction.__call__)
 
 class MyTensor(object):
     def __init__(self, value, grad=0):
-        self.value = value
+        self.value = np.asarray(value)
         self.grad = grad
 
     def __add__(self, other):
