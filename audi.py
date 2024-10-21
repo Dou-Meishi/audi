@@ -195,9 +195,9 @@ def main():
         grad_b = v * a
         return grad_a, grad_b
 
-    a = MyTensor(np.random.randn())
-    b = MyTensor(np.random.randn())
-    v = MyTensor(np.random.randn())
+    a = MyTensor(np.random.randn(3))
+    b = MyTensor(np.random.randn(3))
+    v = MyTensor(np.random.randn(3))
 
     grad_a, grad_b = reverseAD(test_f1, [a, b], v)
     expected_grad_a, expected_grad_b = test_f1_vjp(a, b, v)
