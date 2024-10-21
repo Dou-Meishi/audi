@@ -182,18 +182,19 @@ def reverseAD_along_tape(y, call_tape, v):
             x.grad += grad
 
 
-def test_f1(a, b):
-    z = a + b
-    z = a * z
-    return z
-
-def test_f1_vjp(a, b, v):
-    grad_a = v * (2 * a + b)
-    grad_b = v * a
-    return grad_a, grad_b
-
-
 def main():
+    print("Test with function f(a, b) = a*(a+b)")
+
+    def test_f1(a, b):
+        z = a + b
+        z = a * z
+        return z
+
+    def test_f1_vjp(a, b, v):
+        grad_a = v * (2 * a + b)
+        grad_b = v * a
+        return grad_a, grad_b
+
     a = MyTensor(np.random.randn())
     b = MyTensor(np.random.randn())
     v = MyTensor(np.random.randn())
