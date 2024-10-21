@@ -172,6 +172,7 @@ def _mul_vjp(
     a, b = inputs
     return (b * grad_outputs, a * grad_outputs)
 
+
 def _mul_jvp(
     inputs: list[MyTensor], outputs: MyTensor, grad_inputs: list[MyTensor]
 ) -> MyTensor:
@@ -279,16 +280,17 @@ def _transpose(a: MyTensor) -> MyTensor:
     assert a.value.ndim == 2
     return MyTensor(a.value.T)
 
+
 def _transpose_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
     return grad_outputs.T
 
+
 def _transpose_jvp(
     inputs: list[MyTensor], outputs: MyTensor, grad_inputs: list[MyTensor]
 ) -> MyTensor:
     return grad_inputs[0].T
-
 
 
 def _log(a: MyTensor) -> MyTensor:
@@ -377,7 +379,9 @@ log = MyFunction("Log", _log, func_vjp=_log_vjp, func_jvp=_log_jvp)
 div = MyFunction("Div", _div, func_vjp=_div_vjp, func_jvp=_div_jvp)
 sum = MyFunction("Sum", _sum, func_vjp=_sum_vjp, func_jvp=_sum_jvp)
 expand = MyFunction("Expand", _expand, func_vjp=_expand_vjp, func_jvp=_expand_jvp)
-transpose = MyFunction("Transpose", _transpose, func_vjp=_transpose_vjp, func_jvp=_transpose_jvp)
+transpose = MyFunction(
+    "Transpose", _transpose, func_vjp=_transpose_vjp, func_jvp=_transpose_jvp
+)
 
 
 def reverseAD(
