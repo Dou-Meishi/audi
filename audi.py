@@ -140,6 +140,7 @@ def _multiply_vjp(
 def _dot(a: MyTensor, b: MyTensor) -> MyTensor:
     return MyTensor(a.value.dot(b.value))
 
+
 def _dot_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
@@ -154,9 +155,94 @@ def _dot_jvp(
     return b.dot(grad_outputs), a.dot(grad_outputs)
 
 
+def _sin(a: MyTensor) -> MyTensor:
+    return MyTensor(np.sin(a.value))
+
+
+def _sin_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return grad_outputs * inputs[0].cos()
+
+
+def _sin_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return grad_outputs * inputs[0].cos()
+
+
+def _cos(a: MyTensor) -> MyTensor:
+    return MyTensor(np.cos(a.value))
+
+
+def _cos_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return -grad_outputs * inputs[0].sin()
+
+
+def _cos_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return -grad_outputs * inputs[0].sin()
+
+
+def _exp(a: MyTensor) -> MyTensor:
+    return MyTensor(np.exp(a.value))
+
+
+def _exp_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return grad_outputs * outputs
+
+
+def _exp_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return grad_outputs * outputs
+
+
+def _sub(a: MyTensor, b: MyTensor) -> MyTensor:
+    return MyTensor(a.value - b.value)
+
+
+def _sub_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return [grad_outputs, -grad_outputs]
+
+
+def _sub_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return [grad_outputs, -grad_outputs]
+
+
+def _neg(a: MyTensor) -> MyTensor:
+    return MyTensor(-a.value)
+
+
+def _neg_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return -grad_outputs
+
+
+def _neg_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return -grad_outputs
+
+
 add = MyFunction("Add", _add, func_vjp=_add_vjp, func_jvp=_add_jvp)
 multiply = MyFunction("Multiply", _multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp)
 dot = MyFunction("Dot", _dot, func_vjp=_dot_vjp, func_jvp=_dot_jvp)
+sin = MyFunction("Sin", _sin, func_vjp=_sin_vjp, func_jvp=_sin_jvp)
+cos = MyFunction("Cos", _cos, func_vjp=_cos_vjp, func_jvp=_cos_jvp)
+exp = MyFunction("Exp", _exp, func_vjp=_exp_vjp, func_jvp=_exp_jvp)
+sub = MyFunction("Sub", _sub, func_vjp=_sub_vjp, func_jvp=_sub_jvp)
+neg = MyFunction("Neg", _neg, func_vjp=_neg_vjp, func_jvp=_neg_jvp)
 
 
 def reverseAD(
