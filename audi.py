@@ -175,24 +175,31 @@ def reverseAD_along_tape(y, call_tape, v):
             x.grad += grad
 
 
-def simple_function(a, b):
+def test_f1(a, b):
     z = a + b
     z = a * z
     return z
+
+def test_f1_vjp(a, b, v):
+    grad_a = v * (2 * a + b)
+    grad_b = v * a
+    return grad_a, grad_b
 
 
 def main():
     a = MyTensor(1.0)
     b = MyTensor(2.0)
+    v = MyTensor(1.0)
 
-    reverseAD(simple_function, [a, b], MyTensor(1.0))
+    grad_a, grad_b = reverseAD(test_f1, [a, b], v)
+    expected_grad_a, expected_grad_b = test_f1_vjp(a.value, b.value, v.value)
 
-    print(f"Gradient of a: {a.grad}")
-    print(f"Gradient of b: {b.grad}")
+    print(f"Gradient of a: {grad_a}. Expected value: {expected_grad_a}")
+    print(f"Gradient of b: {grad_b}. Expected value: {expected_grad_b}")
 
     # examine computation history
-    for call_inputs, call_output, func in my_func_tracker.call_tape:
-        print(f"Function: {func.name}, Inputs: {call_inputs}, Output: {call_output}")
+    # for call_inputs, call_output, func in my_func_tracker.call_tape:
+    #     print(f"Function: {func.name}, Inputs: {call_inputs}, Output: {call_output}")
 
 
 if __name__ == "__main__":
