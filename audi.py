@@ -44,9 +44,8 @@ class MyFuncTracker(object):
         @functools.wraps(func)
         def wrapper(objself, *args, **kwargs):
             if self.do_track:
-                inputs = args
                 output = func(objself, *args, **kwargs)
-                self.call_tape.append((inputs, output, objself))
+                self.call_tape.append((args, output, objself, kwargs))
                 return output
             else:
                 return func(objself, *args, **kwargs)
@@ -354,9 +353,9 @@ def reverseAD(
 def reverseAD_along_tape(y, call_tape, v):
     """Backpropagate gradient starting at y. Initially y.grad is set to v."""
     y.grad = v
-    for k_inputs, k_outputs, k_phi in reversed(call_tape):
+    for k_inputs, k_outputs, k_phi, k_kwargs in reversed(call_tape):
         # chain rule
-        grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.grad)
+        grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.grad, **k_kwargs)
         # accumulate grad
         for x, grad in zip(k_inputs, grad_inputs):
             x.grad += grad
