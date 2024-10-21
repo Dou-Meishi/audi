@@ -236,7 +236,9 @@ def _neg_jvp(
 
 
 add = MyFunction("Add", _add, func_vjp=_add_vjp, func_jvp=_add_jvp)
-multiply = MyFunction("Multiply", _multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp)
+multiply = MyFunction(
+    "Multiply", _multiply, func_vjp=_multiply_vjp, func_jvp=_multiply_jvp
+)
 dot = MyFunction("Dot", _dot, func_vjp=_dot_vjp, func_jvp=_dot_jvp)
 sin = MyFunction("Sin", _sin, func_vjp=_sin_vjp, func_jvp=_sin_jvp)
 cos = MyFunction("Cos", _cos, func_vjp=_cos_vjp, func_jvp=_cos_jvp)
