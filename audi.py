@@ -136,6 +136,12 @@ class MyTensor(object):
     def log(self):
         return log(self)
 
+    def sum(self):
+        return sum(self)
+
+    def expand(self, *, shape: list[int]):
+        return expand(self, shape=shape)
+
 
 def _add(a: MyTensor, b: MyTensor) -> MyTensor:
     return MyTensor(a.value + b.value)
@@ -303,6 +309,47 @@ def _div_jvp(
     return grad_outputs / b, -grad_outputs * outputs / b
 
 
+def _sum(a: MyTensor) -> MyTensor:
+    return MyTensor(np.sum(a))
+
+
+def _sum_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return grad_outputs.expand(shape=inputs[0].shape)
+
+
+def _sum_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    return grad_outputs.sum()
+
+
+def _expand(a: MyTensor, *, shape: list[int]) -> MyTensor:
+    assert a.value.ndim == 0
+    return MyTensor(a.value * np.ones(shape))
+
+
+def _expand_vjp(
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_outputs: MyTensor,
+    *,
+    shape: list[int],
+) -> list[MyTensor]:
+    return grad_outputs.sum()
+
+
+def _expand_jvp(
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_outputs: MyTensor,
+    *,
+    shape: list[int],
+) -> list[MyTensor]:
+    return grad_outputs.expand(shape=shape)
+
+
 add = MyFunction("Add", _add, func_vjp=_add_vjp, func_jvp=_add_jvp)
 mul = MyFunction("Mul", _mul, func_vjp=_mul_vjp, func_jvp=_mul_jvp)
 dot = MyFunction("Dot", _dot, func_vjp=_dot_vjp, func_jvp=_dot_jvp)
@@ -313,6 +360,8 @@ sub = MyFunction("Sub", _sub, func_vjp=_sub_vjp, func_jvp=_sub_jvp)
 neg = MyFunction("Neg", _neg, func_vjp=_neg_vjp, func_jvp=_neg_jvp)
 log = MyFunction("Log", _log, func_vjp=_log_vjp, func_jvp=_log_jvp)
 div = MyFunction("Div", _div, func_vjp=_div_vjp, func_jvp=_div_jvp)
+sum = MyFunction("Sum", _sum, func_vjp=_sum_vjp, func_jvp=_sum_jvp)
+expand = MyFunction("Expand", _expand, func_vjp=_expand_vjp, func_jvp=_expand_jvp)
 
 
 def reverseAD(
