@@ -169,8 +169,7 @@ def _mul(a: MyTensor, b: MyTensor) -> MyTensor:
 def _mul_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    a, b = inputs
-    return (b * grad_outputs, a * grad_outputs)
+    return (inputs[1] * grad_outputs, inputs[0] * grad_outputs)
 
 
 def _mul_jvp(
@@ -186,8 +185,7 @@ def _dot(a: MyTensor, b: MyTensor) -> MyTensor:
 def _dot_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    a, b = inputs
-    return b * grad_outputs, a * grad_outputs
+    return (inputs[1] * grad_outputs, inputs[0] * grad_outputs)
 
 
 def _dot_jvp(
@@ -251,7 +249,7 @@ def _sub(a: MyTensor, b: MyTensor) -> MyTensor:
 def _sub_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return [grad_outputs, -grad_outputs]
+    return (grad_outputs, -grad_outputs)
 
 
 def _sub_jvp(
@@ -284,7 +282,7 @@ def _transpose(a: MyTensor) -> MyTensor:
 def _transpose_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return grad_outputs.T
+    return (grad_outputs.T,)
 
 
 def _transpose_jvp(
@@ -316,8 +314,7 @@ def _div(a: MyTensor, b: MyTensor) -> MyTensor:
 def _div_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    _, b = inputs
-    return grad_outputs / b, -grad_outputs * outputs / b
+    return (grad_outputs / inputs[1], -grad_outputs * outputs / inputs[1])
 
 
 def _div_jvp(
@@ -333,7 +330,7 @@ def _sum(a: MyTensor) -> MyTensor:
 def _sum_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return grad_outputs.expand(shape=inputs[0].shape)
+    return (grad_outputs.expand(shape=inputs[0].shape),)
 
 
 def _sum_jvp(
@@ -354,7 +351,7 @@ def _expand_vjp(
     *,
     shape: list[int],
 ) -> list[MyTensor]:
-    return grad_outputs.sum()
+    return (grad_outputs.sum(),)
 
 
 def _expand_jvp(
