@@ -94,6 +94,19 @@ class MyTensor(object):
             other = MyTensor(other)
         return mul(self, other)
 
+    def __sub__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
+        return sub(self, other)
+
+    def __rsub__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
+        return sub(other, self)
+
+    def __neg__(self):
+        return neg(self)
+
     def __repr__(self):
         return repr(self.value)
 
@@ -101,6 +114,15 @@ class MyTensor(object):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
         return dot(self, other)
+
+    def sin(self):
+        return sin(self)
+
+    def cos(self):
+        return cos(self)
+
+    def exp(self):
+        return exp(self)
 
 
 def _add(a: MyTensor, b: MyTensor) -> MyTensor:
