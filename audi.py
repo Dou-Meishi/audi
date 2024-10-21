@@ -184,13 +184,13 @@ def _sin(a: MyTensor) -> MyTensor:
 def _sin_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return grad_outputs * inputs[0].cos()
+    return grad_outputs * inputs[0].cos(),
 
 
 def _sin_jvp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return grad_outputs * inputs[0].cos()
+    return grad_outputs * inputs[0].cos(),
 
 
 def _cos(a: MyTensor) -> MyTensor:
@@ -200,13 +200,13 @@ def _cos(a: MyTensor) -> MyTensor:
 def _cos_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return -grad_outputs * inputs[0].sin()
+    return -grad_outputs * inputs[0].sin(),
 
 
 def _cos_jvp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return -grad_outputs * inputs[0].sin()
+    return -grad_outputs * inputs[0].sin(),
 
 
 def _exp(a: MyTensor) -> MyTensor:
@@ -216,13 +216,13 @@ def _exp(a: MyTensor) -> MyTensor:
 def _exp_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return grad_outputs * outputs
+    return grad_outputs * outputs,
 
 
 def _exp_jvp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return grad_outputs * outputs
+    return grad_outputs * outputs,
 
 
 def _sub(a: MyTensor, b: MyTensor) -> MyTensor:
@@ -248,13 +248,13 @@ def _neg(a: MyTensor) -> MyTensor:
 def _neg_vjp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return -grad_outputs
+    return -grad_outputs,
 
 
 def _neg_jvp(
     inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
 ) -> list[MyTensor]:
-    return -grad_outputs
+    return -grad_outputs,
 
 
 add = MyFunction("Add", _add, func_vjp=_add_vjp, func_jvp=_add_jvp)
