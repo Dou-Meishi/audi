@@ -34,6 +34,8 @@ class MyFuncTracker(object):
         self.do_track = do_track
         self.reset()
 
+        self.debug = False
+
     def reset(self):
         """Reset the call tape to empty."""
         self.call_tape = []
@@ -47,6 +49,12 @@ class MyFuncTracker(object):
             if self.do_track:
                 output = func(objself, *args, **kwargs)
                 self.call_tape.append((args, output, objself, kwargs))
+
+                if self.debug:
+                    print(f"Function: {objself.name} (with kwargs {kwargs})")
+                    print(f"\tInputs: {args}")
+                    print(f"\tOutput: {output}")
+
                 return output
             else:
                 return func(objself, *args, **kwargs)
