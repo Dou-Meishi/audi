@@ -115,15 +115,15 @@ class MyTensor(object):
         if self.ndim == 2 and other.ndim == 2:
             # matrix-matrix multiplication
             return matmul(self, other)
-        elif self.ndim == 2 and other.dim == 1:
+        elif self.ndim == 2 and other.ndim == 1:
             # matrix-vector multiplication
             other = other.as_row_vector().T
             return matmul(self, other).sum(dim=1)
-        elif self.ndim == 1 and other.dim == 2:
+        elif self.ndim == 1 and other.ndim == 2:
             # vector-matrix multiplication
             self = self.as_row_vector()
             return matmul(self, other).sum(dim=0)
-        elif self.ndim == 1 and other.dim == 1:
+        elif self.ndim == 1 and other.ndim == 1:
             # vector dot
             self = self.as_row_vector()
             other = other.as_row_vector().T
