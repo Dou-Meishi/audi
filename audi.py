@@ -422,7 +422,7 @@ def _sum(a: MyTensor, *, dim: Union[None, int, list[int]] = None) -> MyTensor:
     # we have to convert empty list or empty tuple to None manually
     if dim is not None and not isinstance(dim, int) and len(dim) == 0:
         dim = None
-    return MyTensor(np.sum(a, axis=dim))
+    return MyTensor(np.sum(a.value, axis=dim))
 
 
 def _sum_vjp(
