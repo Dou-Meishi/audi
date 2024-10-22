@@ -477,7 +477,7 @@ def _expand_jvp(
 def _as_column_vector(a: MyTensor) -> MyTensor:
     # expect a is a row vector
     assert a.ndim == 2 and a.shape[0] == 1
-    return MyTensor(np.reshape(a.value, -1, copy=True))
+    return MyTensor(np.reshape(a.value.copy(), -1))
 
 
 def _as_column_vector_vjp(
@@ -495,7 +495,7 @@ def _as_column_vector_jvp(
 def _as_row_vector(a: MyTensor) -> MyTensor:
     # expect a is a column vector
     assert a.ndim == 1
-    return MyTensor(np.reshape(a.value, (1, -1), copy=True))
+    return MyTensor(np.reshape(a.value.copy(), (1, -1)))
 
 
 def _as_row_vector_vjp(
