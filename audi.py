@@ -145,6 +145,14 @@ class MyTensor(object):
     def T(self):
         return transpose(self)
 
+    @property
+    def shape(self):
+        return self.value.shape
+
+    @property
+    def ndim(self):
+        return self.value.ndim
+
 
 def _add(a: MyTensor, b: MyTensor) -> MyTensor:
     return MyTensor(a.value + b.value)
