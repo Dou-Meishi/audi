@@ -46,15 +46,13 @@ class MyFuncTracker(object):
 
         @functools.wraps(func)
         def wrapper(objself, *args, **kwargs):
+            if self.debug:
+                print(f"Function: {objself.name} (with kwargs {kwargs})")
+                print(f"\tInputs: {args}")
+
             if self.do_track:
                 output = func(objself, *args, **kwargs)
                 self.call_tape.append((args, output, objself, kwargs))
-
-                if self.debug:
-                    print(f"Function: {objself.name} (with kwargs {kwargs})")
-                    print(f"\tInputs: {args}")
-                    print(f"\tOutput: {output}")
-
                 return output
             else:
                 return func(objself, *args, **kwargs)
