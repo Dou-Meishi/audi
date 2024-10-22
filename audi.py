@@ -77,42 +77,50 @@ class MyTensor(object):
     def __add__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return add(self, other)
+        a, b = MyTensor.broadcast(self, other)
+        return add(a, b)
 
     def __radd__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return add(self, other)
+        a, b = MyTensor.broadcast(self, other)
+        return add(b, a)
 
     def __mul__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return mul(self, other)
+        a, b = MyTensor.broadcast(self, other)
+        return mul(a, b)
 
     def __rmul__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return mul(self, other)
+        a, b = MyTensor.broadcast(self, other)
+        return mul(b, a)
 
     def __sub__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return sub(self, other)
+        a, b = MyTensor.broadcast(self, other)
+        return sub(a, b)
 
     def __rsub__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return sub(other, self)
+        a, b = MyTensor.broadcast(self, other)
+        return sub(b, a)
 
     def __truediv__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return div(self, other)
+        a, b = MyTensor.broadcast(self, other)
+        return div(a, b)
 
     def __rtruediv__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
-        return div(other, self)
+        a, b = MyTensor.broadcast(self, other)
+        return div(b, a)
 
     def __neg__(self):
         return neg(self)
@@ -155,6 +163,11 @@ class MyTensor(object):
     @property
     def ndim(self):
         return self.value.ndim
+
+    @staticmethod
+    def broadcast(*tensors):
+        shape = np.broadcast_shapes(*[t.shape for t in tensors])
+        return tuple(t.expand(shape=shape) for t in tensors)
 
 
 def _add(a: MyTensor, b: MyTensor) -> MyTensor:
