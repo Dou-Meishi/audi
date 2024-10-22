@@ -495,8 +495,10 @@ def main():
     print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # examine computation history
-    # for call_inputs, call_output, func in my_func_tracker.call_tape:
-    #     print(f"Function: {func.name}, Inputs: {call_inputs}, Output: {call_output}")
+    # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
+    #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
+    #     print(f"\tInputs: {call_inputs}")
+    #     print(f"\tOutput: {call_output}")
 
 
 if __name__ == "__main__":
