@@ -1,6 +1,7 @@
 from collections.abc import Callable
 import functools
 from contextlib import contextmanager
+from typing import Union
 
 import numpy as np
 
@@ -136,8 +137,8 @@ class MyTensor(object):
     def log(self):
         return log(self)
 
-    def sum(self):
-        return sum(self)
+    def sum(self, dim: Union[None, int, list[int]] = None):
+        return sum(self, dim=dim)
 
     def expand(self, *, shape: list[int]):
         return expand(self, shape=shape)
@@ -331,25 +332,38 @@ def _div_jvp(
     return outputs * (grad_inputs[0] / inputs[0] - grad_inputs[1] / inputs[1])
 
 
-def _sum(a: MyTensor) -> MyTensor:
-    return MyTensor(np.sum(a))
+def _sum(a: MyTensor, *, dim: Union[None, int, list[int]] = None) -> MyTensor:
+    # We follow pytorch convention, where
+    # torch.sum(a, dim=tuple()) is same as torch.sum(a, dim=None)
+    # However, as np.sum(a, tuple()) is different from np.sum(a, None),
+    # we have to convert empty list or empty tuple to None manually
+    if dim is not None and not isinstance(dim, int) and len(dim) == 0:
+        dim = None
+    return MyTensor(np.sum(a, axis=dim))
 
 
 def _sum_vjp(
-    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_outputs: MyTensor,
+    *,
+    dim: Union[None, int, list[int]] = None,
 ) -> list[MyTensor]:
     return (grad_outputs.expand(shape=inputs[0].shape),)
 
 
 def _sum_jvp(
-    inputs: list[MyTensor], outputs: MyTensor, grad_inputs: list[MyTensor]
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_inputs: list[MyTensor],
+    *,
+    dim: Union[None, int, list[int]] = None,
 ) -> MyTensor:
-    return grad_inputs[0].sum()
+    return grad_inputs[0].sum(dim=dim)
 
 
 def _expand(a: MyTensor, *, shape: list[int]) -> MyTensor:
-    assert a.value.ndim == 0
-    return MyTensor(a.value * np.ones(shape))
+    return MyTensor(np.broadcast_to(a.value, shape))
 
 
 def _expand_vjp(
@@ -359,7 +373,12 @@ def _expand_vjp(
     *,
     shape: list[int],
 ) -> list[MyTensor]:
-    return (grad_outputs.sum(),)
+    inputs_shape = list(inputs[0].shape)
+    # prepend to align with the required shape
+    inputs_shape = [1] * (len(inputs_shape) - len(shape)) + inputs_shape
+    # computes axis to be reduced, i.e., the axes where expand occurs
+    dim = tuple(i for i, (a, b) in enumerate(zip(inputs_shape, shape)) if a != b)
+    return (grad_outputs.sum(dim=dim).expand(shape=inputs[0].shape),)
 
 
 def _expand_jvp(
