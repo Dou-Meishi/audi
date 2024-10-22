@@ -98,6 +98,36 @@ class MyTensor(object):
         a, b = MyTensor.broadcast(self, other)
         return mul(b, a)
 
+    def __matmul__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
+        # as matmul can only deal with matrix-matrix multiplication,
+        # we have to convert vectors to matrix manually
+        # and then convert the result back
+        if self.ndim == 2 and other.ndim == 2:
+            # matrix-matrix multiplication
+            return matmul(self, other)
+        elif self.ndim == 2 and other.dim == 1:
+            # matrix-vector multiplication
+            other = other.as_row_vector().T
+            return matmul(self, other).sum(dim=1)
+        elif self.ndim == 1 and other.dim == 2:
+            # vector-matrix multiplication
+            self = self.as_row_vector()
+            return matmul(self, other).sum(dim=0)
+        elif self.ndim == 1 and other.dim == 1:
+            # vector dot
+            self = self.as_row_vector()
+            other = other.as_row_vector().T
+            return matmul(self, other).sum()
+        else:
+            raise ValueError(f"Invalid shape {self.shape} @ {other.shape} for Matmul")
+
+    def __rmatmul__(self, other):
+        if not isinstance(other, MyTensor):
+            other = MyTensor(other)
+        return other @ self
+
     def __sub__(self, other):
         if not isinstance(other, MyTensor):
             other = MyTensor(other)
@@ -208,6 +238,28 @@ def _mul_jvp(
     inputs: list[MyTensor], outputs: MyTensor, grad_inputs: list[MyTensor]
 ) -> MyTensor:
     return inputs[1] * grad_inputs[0] + inputs[0] * grad_inputs[1]
+
+
+def _matmul(a: MyTensor, b: MyTensor) -> MyTensor:
+    """Matrix-matrix multiplication. For matrix-vector multiplication,
+    please convert the inputs to matrices and then convert the result
+    to vector manaully."""
+    assert a.ndim == 2 and b.ndim == 2
+    return MyTensor(a.value @ b.value)
+
+
+def _matmul_vjp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
+) -> list[MyTensor]:
+    (A, B), v = inputs, grad_outputs
+    return (v @ B.T, A.T @ v)
+
+
+def _matmul_jvp(
+    inputs: list[MyTensor], outputs: MyTensor, grad_inputs: list[MyTensor]
+) -> MyTensor:
+    (A, B), (dA, dB) = inputs, grad_inputs
+    return dA @ B + A @ dB
 
 
 def _dot(a: MyTensor, b: MyTensor) -> MyTensor:
@@ -461,6 +513,7 @@ neg = MyFunction("Neg", _neg, func_vjp=_neg_vjp, func_jvp=_neg_jvp)
 log = MyFunction("Log", _log, func_vjp=_log_vjp, func_jvp=_log_jvp)
 div = MyFunction("Div", _div, func_vjp=_div_vjp, func_jvp=_div_jvp)
 sum = MyFunction("Sum", _sum, func_vjp=_sum_vjp, func_jvp=_sum_jvp)
+matmul = MyFunction("Matmul", _matmul, func_vjp=_matmul_vjp, func_jvp=_matmul_jvp)
 expand = MyFunction("Expand", _expand, func_vjp=_expand_vjp, func_jvp=_expand_jvp)
 transpose = MyFunction(
     "Transpose", _transpose, func_vjp=_transpose_vjp, func_jvp=_transpose_jvp
