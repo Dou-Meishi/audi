@@ -141,6 +141,8 @@ class MyTensor(object):
         return sum(self, dim=dim)
 
     def expand(self, *, shape: list[int]):
+        if tuple(self.shape) == shape:
+            return self
         return expand(self, shape=shape)
 
     def T(self):
