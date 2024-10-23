@@ -181,8 +181,8 @@ class MyTensor(object):
     def log(self):
         return log(self)
 
-    def sum(self, dim: Union[None, int, list[int]] = None):
-        return sum(self, dim=dim)
+    def sum(self, *, dim: Union[None, int, list[int]] = None, keepdim: bool = False):
+        return sum(self, dim=dim, keepdim=keepdim)
 
     def expand(self, *, shape: list[int]):
         if tuple(self.shape) == shape:
@@ -422,14 +422,16 @@ def _div_jvp(
     return outputs * (grad_inputs[0] / inputs[0] - grad_inputs[1] / inputs[1])
 
 
-def _sum(a: MyTensor, *, dim: Union[None, int, list[int]] = None) -> MyTensor:
+def _sum(
+    a: MyTensor, *, dim: Union[None, int, list[int]] = None, keepdim: bool = False
+) -> MyTensor:
     # We follow pytorch convention, where
     # torch.sum(a, dim=tuple()) is same as torch.sum(a, dim=None)
     # However, as np.sum(a, tuple()) is different from np.sum(a, None),
     # we have to convert empty list or empty tuple to None manually
     if dim is not None and not isinstance(dim, int) and len(dim) == 0:
         dim = None
-    return MyTensor(np.sum(a.value, axis=dim))
+    return MyTensor(np.sum(a.value, axis=dim, keepdims=keepdim))
 
 
 def _sum_vjp(
@@ -438,7 +440,10 @@ def _sum_vjp(
     grad_outputs: MyTensor,
     *,
     dim: Union[None, int, list[int]] = None,
+    keepdim: bool = False,
 ) -> list[MyTensor]:
+    if not keepdim:
+        grad_outputs = grad_outputs.unsqueeze(dim=dim)
     return (grad_outputs.expand(shape=inputs[0].shape),)
 
 
@@ -448,8 +453,9 @@ def _sum_jvp(
     grad_inputs: list[MyTensor],
     *,
     dim: Union[None, int, list[int]] = None,
+    keepdim: bool = False,
 ) -> MyTensor:
-    return grad_inputs[0].sum(dim=dim)
+    return grad_inputs[0].sum(dim=dim, keepdim=keepdim)
 
 
 def _expand(a: MyTensor, *, shape: list[int]) -> MyTensor:
@@ -463,12 +469,37 @@ def _expand_vjp(
     *,
     shape: list[int],
 ) -> list[MyTensor]:
-    inputs_shape = list(inputs[0].shape)
-    # prepend to align with the required shape
-    inputs_shape = [1] * (len(inputs_shape) - len(shape)) + inputs_shape
-    # computes axis to be reduced, i.e., the axes where expand occurs
-    dim = tuple(i for i, (a, b) in enumerate(zip(inputs_shape, shape)) if a != b)
-    return (grad_outputs.sum(dim=dim).expand(shape=inputs[0].shape),)
+    """Reduce `grad_outputs` to `inputs[0].shape`.
+
+    Example. For input shape (4, 1, 3, 1) and output shape (7, 1, 4, 5, 3, 6),
+
+    1. prepend the input shape to align with the required shape
+
+        `padded_input_shape = (1, 1, 4, 1, 3, 1)`
+
+    2. identify axes to be reduced, i.e., the axes where expand occurs
+
+        `dim = (0, 3, 5)`
+
+    3. sum `grad_outputs` along `dim` with `keepdim=True`. After that,
+
+        `grad_input.shape == padded_input_shape`
+
+    4. squeeze prepended shape. After that
+
+        `grad_input.shape == inputs[0].shape`
+    """
+    # 1. prepend the input shape to align with the required shape
+    pad = len(shape) - inputs[0].ndim
+    padded_input_shape = (1,) * pad + tuple(inputs[0].shape)
+    # 2. identify axes to be reduced, i.e., the axes where expand occurs
+    dim = tuple(i for i, (a, b) in enumerate(zip(padded_input_shape, shape)) if a != b)
+    # 3. sum `grad_outputs` along `dim` with `keepdim=True`
+    grad_input = grad_outputs.sum(dim=dim, keepdim=True)
+    # 4. squeeze prepended shape
+    if pad > 0:
+        grad_input = grad_input.squeeze(dim=list(range(pad)))
+    return (grad_input,)
 
 
 def _expand_jvp(
