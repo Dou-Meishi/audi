@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Callable
 import functools
 from contextlib import contextmanager
@@ -84,9 +85,9 @@ MyFunction.__call__ = my_func_tracker(MyFunction.__call__)
 
 
 class MyTensor(object):
-    def __init__(self, value, grad=0):
+    def __init__(self, value=0):
         self.value = np.asarray(value)
-        self.grad = grad
+        self.buffer = defaultdict(MyTensor)
 
     def __add__(self, other):
         if not isinstance(other, MyTensor):
@@ -599,6 +600,8 @@ def reverseAD(
     f: Callable[[list[MyTensor]], MyTensor],
     inputs: list[MyTensor],
     v: MyTensor,
+    *,
+    gradkey: str = "grad",
 ) -> list[MyTensor]:
     """Use reverse-mode AD to compute the vector-Jacobian product of f.
     Return the gradient of dot(f, v) evaluated at inputs.
@@ -613,36 +616,40 @@ def reverseAD(
            In the default case, this function effectively differentiates
            the sum of f's components.
 
+    - `gradkey`: A string used for the dict key. For a given tensor `a`,
+           the grad is stored in `a.buffer[gradkey]`.
+
     Note
     ----
-    Gradients are accumulated in tensor's `grad` attribute, which is
-    zero by default. However, this function does not check whether
-    `grad` is zero or not. It simply accumulates all gradient in it."""
-    my_func_tracker.reset()
-    with my_func_tracker.track_func(True):
-        # do computations and track
+    The gradient of tensor `a` is accumulated in `a.bffer[gradkey]`, which is
+    zero by default. However, this function does not check whether it is zero or
+    not. It simply accumulates all gradient in it.
+    """
+    tape = []
+    with my_func_tracker.track_func(True, tape=tape):
+        # do computations and track in tape
         y = f(*inputs)
-
-    # extract computation history
-    tape = my_func_tracker.call_tape
     # backpropagate gradient starting at y
-    reverseAD_along_tape(y, tape, v)
-    return [x.grad for x in inputs]
+    reverseAD_along_tape(y, tape, v, gradkey=gradkey)
+    return [x.buffer[gradkey] for x in inputs]
 
 
-def reverseAD_along_tape(y, call_tape, v):
-    """Backpropagate gradient starting at y. Initially y.grad is set to v."""
-    y.grad = v
+def reverseAD_along_tape(y, call_tape, v, *, gradkey):
+    """Backpropagate gradient starting at y. Initially the grad of y is set to
+    v.  `gradkey` is a string used for the dict key. For a given tensor `a`, the
+    grad is stored in `a.buffer[gradkey]`
+    """
+    y.buffer[gradkey] = v
     for k_inputs, k_outputs, k_phi, k_kwargs in reversed(call_tape):
         if my_func_tracker.debug:
             print(f"VJP of: {k_phi.name} (with kwargs {k_kwargs})")
             print(f"\tInputs: {k_inputs}")
 
         # chain rule
-        grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.grad, **k_kwargs)
+        grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.buffer[gradkey], **k_kwargs)
         # accumulate grad
         for x, grad in zip(k_inputs, grad_inputs):
-            x.grad += grad
+            x.buffer[gradkey] += grad
 
 
 def main():
