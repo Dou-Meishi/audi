@@ -278,6 +278,7 @@ def _matmul_jvp(
 
 
 def _dot(a: MyTensor, b: MyTensor) -> MyTensor:
+    assert a.ndim == 1 and b.ndim == 1
     return MyTensor(a.value.dot(b.value))
 
 
