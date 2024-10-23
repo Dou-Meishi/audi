@@ -203,11 +203,11 @@ class MyTensor(object):
 
     def as_column_vector(self):
         """From shape (1, n) to (n,)"""
-        return as_column_vector(self)
+        return self.squeeze(dim=0)
 
     def as_row_vector(self):
         """From shape (n,) to (1, n)"""
-        return as_row_vector(self)
+        return self.unsqueeze(dim=0)
 
     @property
     def shape(self):
@@ -562,42 +562,6 @@ def _unsqueeze_jvp(
     return grad_inputs[0].unsqueeze(dim=dim)
 
 
-def _as_column_vector(a: MyTensor) -> MyTensor:
-    # expect a is a row vector
-    assert a.ndim == 2 and a.shape[0] == 1
-    return MyTensor(np.reshape(a.value.copy(), -1))
-
-
-def _as_column_vector_vjp(
-    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
-) -> list[MyTensor]:
-    return (grad_outputs.as_row_vector(),)
-
-
-def _as_column_vector_jvp(
-    inputs: list[MyTensor], outputs: MyTensor, grad_inputs: list[MyTensor]
-) -> MyTensor:
-    return grad_inputs[0].as_column_vector()
-
-
-def _as_row_vector(a: MyTensor) -> MyTensor:
-    # expect a is a column vector
-    assert a.ndim == 1
-    return MyTensor(np.reshape(a.value.copy(), (1, -1)))
-
-
-def _as_row_vector_vjp(
-    inputs: list[MyTensor], outputs: MyTensor, grad_outputs: MyTensor
-) -> list[MyTensor]:
-    return (grad_outputs.as_column_vector(),)
-
-
-def _as_row_vector_jvp(
-    inputs: list[MyTensor], outputs: MyTensor, grad_inputs: list[MyTensor]
-) -> MyTensor:
-    return grad_inputs[0].as_row_vector()
-
-
 add = MyFunction("Add", _add, func_vjp=_add_vjp, func_jvp=_add_jvp)
 mul = MyFunction("Mul", _mul, func_vjp=_mul_vjp, func_jvp=_mul_jvp)
 dot = MyFunction("Dot", _dot, func_vjp=_dot_vjp, func_jvp=_dot_jvp)
@@ -617,18 +581,6 @@ unsqueeze = MyFunction(
 )
 transpose = MyFunction(
     "Transpose", _transpose, func_vjp=_transpose_vjp, func_jvp=_transpose_jvp
-)
-as_column_vector = MyFunction(
-    "As column vector",
-    _as_column_vector,
-    func_vjp=_as_column_vector_vjp,
-    func_jvp=_as_column_vector_jvp,
-)
-as_row_vector = MyFunction(
-    "As row vector",
-    _as_row_vector,
-    func_vjp=_as_row_vector_vjp,
-    func_jvp=_as_row_vector_jvp,
 )
 
 
