@@ -513,6 +513,8 @@ def _expand_jvp(
 
 
 def _squeeze(a: MyTensor, *, dim: Union[int, list[int]]) -> MyTensor:
+    if isinstance(dim, int):
+        dim = [dim]
     return MyTensor(np.squeeze(a.value.copy(), tuple(dim)))
 
 
