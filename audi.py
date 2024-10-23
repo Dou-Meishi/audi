@@ -677,8 +677,9 @@ def reverseAD_along_tape(y, call_tape, v):
 
 
 def main():
+    print("Test grad.")
     # ==================================================
-    print("Test with function f(a, b) = a*(a+b)")
+    print("\nTest with function f(a, b) = a*(a+b)")
 
     def test_f1(a, b):
         z = a + b
@@ -703,7 +704,7 @@ def main():
     print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
-    print("Test with function f(a, b) = Dot(a,a+b)")
+    print("\nTest with function f(a, b) = Dot(a,a+b)")
 
     def test_f2(a, b):
         z = a + b
@@ -728,7 +729,7 @@ def main():
     print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
-    print("Test with function f(a, k) = Dot(a,a+k1)")
+    print("\nTest with function f(a, k) = Dot(a,a+k1)")
 
     def test_f3(a, k):
         assert k.ndim == 0
@@ -755,7 +756,7 @@ def main():
     print(f"Gradient of k: {grad_k}. Matches expected value: {match_k}")
 
     # ==================================================
-    print("Test with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
+    print("\nTest with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
 
     def test_f4(a, b):
         z1 = a.dot(a)
@@ -780,7 +781,7 @@ def main():
     print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
-    print("Test with function f(A, x, b) = Dot(Ax-b, Ax-b)")
+    print("\nTest with function f(A, x, b) = Dot(Ax-b, Ax-b)")
 
     def test_f5(A, x, b):
         z = A @ x - b
