@@ -443,6 +443,8 @@ def _sum_vjp(
     dim: Union[None, int, list[int]] = None,
     keepdim: bool = False,
 ) -> list[MyTensor]:
+    if dim is None:
+        dim = tuple(range(inputs[0].ndim))
     if not keepdim:
         grad_outputs = grad_outputs.unsqueeze(dim=dim)
     return (grad_outputs.expand(shape=inputs[0].shape),)
