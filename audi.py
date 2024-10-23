@@ -770,6 +770,33 @@ def main():
     print(f"Gradient of x: {grad_x}. Matches expected value: {match_x}")
     print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
+    # ==================================================
+    print("\nTest with function f(a, b) = BCEWithLogits(a, b)")
+
+    def test_f6(a, b):
+        s = 1 / (1 + exp(-a))
+        nll = -sum(b * log(s) + (1 - b) * log(1 - s))
+        return nll
+
+    def test_f6_vjp(a, b, v):
+        s = 1 / (1 + exp(-a))
+        grad_a = v * (s - b)
+        grad_b = v * log(1/s - 1)
+        return grad_a, grad_b
+
+    a = MyTensor(np.random.randn(3))
+    b = MyTensor(np.random.randn(3))
+    v = MyTensor(np.asarray(np.random.randn()))
+
+    grad_a, grad_b = reverseAD(test_f6, [a, b], v)
+    expected_grad_a, expected_grad_b = test_f6_vjp(a, b, v)
+    match_a = np.allclose(grad_a.value, expected_grad_a.value)
+    match_b = np.allclose(grad_b.value, expected_grad_b.value)
+
+    print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
+    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
+
+
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
     #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
