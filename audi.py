@@ -189,6 +189,14 @@ class MyTensor(object):
             return self
         return expand(self, shape=shape)
 
+    def squeeze(self, *, dim: Union[None, int, list[int]] = None):
+        if dim is None:
+            dim = tuple(idx for idx, i in enumerate(self.shape) if i == 1)
+        return squeeze(self, dim=dim)
+
+    def unsqueeze(self, *, dim: Union[int, list[int]]):
+        return unsqueeze(self, dim=dim)
+
     @property
     def T(self):
         return transpose(self)
@@ -473,6 +481,55 @@ def _expand_jvp(
     return grad_inputs[0].expand(shape=shape)
 
 
+def _squeeze(a: MyTensor, *, dim: Union[int, list[int]]) -> MyTensor:
+    return MyTensor(np.squeeze(a.value.copy(), dim))
+
+
+def _squeeze_vjp(
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_outputs: MyTensor,
+    *,
+    dim: Union[int, list[int]],
+) -> list[MyTensor]:
+    return (grad_outputs.unsqueeze(dim=dim),)
+
+
+def _squeeze_jvp(
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_inputs: list[MyTensor],
+    *,
+    dim: Union[None, int, list[int]] = None,
+) -> MyTensor:
+    return grad_inputs[0].squeeze(dim=dim)
+
+
+def _unsqueeze(a: MyTensor, *, dim: Union[int, list[int]]) -> MyTensor:
+    return MyTensor(np.expand_dims(a.value.copy(), dim))
+
+
+def _unsqueeze_vjp(
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_outputs: MyTensor,
+    *,
+    dim: Union[int, list[int]],
+) -> list[MyTensor]:
+    return (grad_outputs.squeeze(dim=dim),)
+
+
+def _unsqueeze_jvp(
+    inputs: list[MyTensor],
+    outputs: MyTensor,
+    grad_inputs: list[MyTensor],
+    *,
+    dim: Union[None, int, list[int]] = None,
+) -> MyTensor:
+    return grad_inputs[0].unsqueeze(dim=dim)
+
+
+
 def _as_column_vector(a: MyTensor) -> MyTensor:
     # expect a is a row vector
     assert a.ndim == 2 and a.shape[0] == 1
@@ -522,6 +579,10 @@ div = MyFunction("Div", _div, func_vjp=_div_vjp, func_jvp=_div_jvp)
 sum = MyFunction("Sum", _sum, func_vjp=_sum_vjp, func_jvp=_sum_jvp)
 matmul = MyFunction("Matmul", _matmul, func_vjp=_matmul_vjp, func_jvp=_matmul_jvp)
 expand = MyFunction("Expand", _expand, func_vjp=_expand_vjp, func_jvp=_expand_jvp)
+squeeze = MyFunction("Squeeze", _squeeze, func_vjp=_squeeze_vjp, func_jvp=_squeeze_jvp)
+unsqueeze = MyFunction(
+    "Unsqueeze", _unsqueeze, func_vjp=_unsqueeze_vjp, func_jvp=_unsqueeze_jvp
+)
 transpose = MyFunction(
     "Transpose", _transpose, func_vjp=_transpose_vjp, func_jvp=_transpose_jvp
 )
