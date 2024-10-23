@@ -671,7 +671,7 @@ def hvp_by_reverse_reverseAD(
         for grad, v in zip(grad_inputs, v_inputs):
             yy += sum(grad * v)
     # apply reverse-mode AD to yy
-    reverseAD_along_tape(yy, tape2, MyTensor(1.), gradkey="rrgrad2")
+    reverseAD_along_tape(yy, tape1 + tape2, MyTensor(1.), gradkey="rrgrad2")
     return [x.buffer["rrgrad2"] for x in inputs]
 
 
