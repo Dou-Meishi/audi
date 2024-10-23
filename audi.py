@@ -60,13 +60,21 @@ class MyFuncTracker(object):
         return wrapper
 
     @contextmanager
-    def track_func(self, do_track: bool):
-        """Context manager to enable or disable tracking within a block."""
+    def track_func(self, do_track: bool, tape: Union[None, list] = None):
+        """Context manager to enable or disable tracking within a block.  If
+        tape is not None, store records in it. Otherwise, store records in
+        `self.call_tape`."""
+        if tape is None:
+            tape = self.call_tape    # use self.call_tape by default
+        # store old attributes
+        old_do_track, old_call_tape = self.do_track, self.call_tape
         try:
-            self.do_track = do_track
+            # track calls and store them in tape
+            self.call_tape = tape
             yield
         finally:
-            self.do_track = False
+            # restore old attributes
+            self.do_track, self.call_tape = old_do_track, old_call_tape
 
 
 # initialize a global function tracker
