@@ -652,6 +652,29 @@ def reverseAD_along_tape(y, call_tape, v, *, gradkey):
             x.buffer[gradkey] += grad
 
 
+def hvp_by_reverse_reverseAD(
+    f: Callable[[list[MyTensor]], MyTensor],
+    inputs: list[MyTensor],
+    v_inputs: list[MyTensor],
+) -> list[MyTensor]:
+    """Use reverse-on-reverse mode AD to calculate the Hessian-vector product of f."""
+    tape1 = []
+    with my_func_tracker.track_func(True, tape=tape1):
+        # do computations and track in tape1
+        y = f(*inputs)
+    tape2 = []
+    with my_func_tracker.track_func(True, tape=tape2):
+        # compute vector product of grad and v
+        reverseAD_along_tape(y, tape1, MyTensor(1.), gradkey="rrgrad1")
+        grad_inputs = [x.buffer["rrgrad1"] for x in inputs]
+        yy = MyTensor(0.)
+        for grad, v in zip(grad_inputs, v_inputs):
+            yy += sum(grad * v)
+    # apply reverse-mode AD to yy
+    reverseAD_along_tape(yy, tape2, MyTensor(1.), gradkey="rrgrad2")
+    return [x.buffer["rrgrad2"] for x in inputs]
+
+
 def main():
     print("Test grad.")
     # ==================================================
