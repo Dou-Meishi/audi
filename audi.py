@@ -35,7 +35,7 @@ class MyFuncTracker(object):
         self.do_track = do_track
         self.reset()
 
-        self.debug = False
+        self.debug = 0
 
     def reset(self):
         """Reset the call tape to empty."""
@@ -47,7 +47,7 @@ class MyFuncTracker(object):
 
         @functools.wraps(func)
         def wrapper(objself, *args, **kwargs):
-            if self.debug:
+            if self.debug > 1:
                 print(f"Function: {objself.name} (with kwargs {kwargs})")
                 print(f"\tInputs: {args}")
 
@@ -641,7 +641,7 @@ def reverseAD_along_tape(y, call_tape, v, *, gradkey):
     """
     y.buffer[gradkey] = v
     for k_inputs, k_outputs, k_phi, k_kwargs in reversed(call_tape):
-        if my_func_tracker.debug:
+        if my_func_tracker.debug > 0:
             print(f"VJP of: {k_phi.name} (with kwargs {k_kwargs})")
             print(f"\tInputs: {k_inputs}")
 
