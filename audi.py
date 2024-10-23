@@ -679,7 +679,7 @@ def main():
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
-    v = MyTensor(np.random.randn(1))
+    v = MyTensor(np.asarray(np.random.randn()))
 
     grad_a, grad_b = reverseAD(test_f2, [a, b], v)
     expected_grad_a, expected_grad_b = test_f2_vjp(a, b, v)
@@ -706,7 +706,7 @@ def main():
 
     a = MyTensor(np.random.randn(3))
     k = MyTensor(np.asarray(np.random.randn()))
-    v = MyTensor(np.random.randn(1))
+    v = MyTensor(np.asarray(np.random.randn()))
 
     grad_a, grad_k = reverseAD(test_f3, [a, k], v)
     expected_grad_a, expected_grad_k = test_f3_vjp(a, k, v)
@@ -731,7 +731,7 @@ def main():
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
-    v = MyTensor(np.random.randn(1))
+    v = MyTensor(np.asarray(np.random.randn()))
 
     grad_a, grad_b = reverseAD(test_f4, [a, b], v)
     expected_grad_a, expected_grad_b = test_f4_vjp(a, b, v)
@@ -758,7 +758,7 @@ def main():
     A = MyTensor(np.random.randn(4, 3))
     x = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(4))
-    v = MyTensor(np.random.randn(1))
+    v = MyTensor(np.asarray(np.random.randn()))
 
     grad_A, grad_x, grad_b = reverseAD(test_f5, [A, x, b], v)
     expected_grad_A, expected_grad_x, expected_grad_b = test_f5_vjp(A, x, b, v)
