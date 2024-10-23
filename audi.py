@@ -626,6 +626,10 @@ def reverseAD_along_tape(y, call_tape, v):
     """Backpropagate gradient starting at y. Initially y.grad is set to v."""
     y.grad = v
     for k_inputs, k_outputs, k_phi, k_kwargs in reversed(call_tape):
+        if my_func_tracker.debug:
+            print(f"VJP of: {k_phi.name} (with kwargs {k_kwargs})")
+            print(f"\tInputs: {k_inputs}")
+
         # chain rule
         grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.grad, **k_kwargs)
         # accumulate grad
