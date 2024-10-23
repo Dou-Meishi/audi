@@ -516,7 +516,7 @@ def _expand_jvp(
 def _squeeze(a: MyTensor, *, dim: Union[int, list[int]]) -> MyTensor:
     if isinstance(dim, int):
         dim = [dim]
-    return MyTensor(np.squeeze(a.value.copy(), tuple(dim)))
+    return MyTensor(np.squeeze(a.value, tuple(dim)))
 
 
 def _squeeze_vjp(
@@ -540,7 +540,7 @@ def _squeeze_jvp(
 
 
 def _unsqueeze(a: MyTensor, *, dim: Union[int, list[int]]) -> MyTensor:
-    return MyTensor(np.expand_dims(a.value.copy(), dim))
+    return MyTensor(np.expand_dims(a.value, dim))
 
 
 def _unsqueeze_vjp(
