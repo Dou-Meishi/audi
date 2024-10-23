@@ -189,6 +189,7 @@ class MyTensor(object):
             return self
         return expand(self, shape=shape)
 
+    @property
     def T(self):
         return transpose(self)
 
