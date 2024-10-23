@@ -779,6 +779,35 @@ def main():
     print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
     print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
+    # ==================================================
+    print("Test with function f(A, x, b) = Dot(Ax-b, Ax-b)")
+
+    def test_f5(A, x, b):
+        z = A @ x - b
+        return z.dot(z)
+
+    def test_f5_vjp(A, x, b, v):
+        z = A @ x - b
+        dA = 2 * z.as_row_vector().T @ x.as_row_vector()
+        dx = 2 * A.T @ z
+        db = -2 * z
+        return dA * v, dx * v, db * v
+
+    A = MyTensor(np.random.randn(4, 3))
+    x = MyTensor(np.random.randn(3))
+    b = MyTensor(np.random.randn(4))
+    v = MyTensor(np.random.randn(1))
+
+    grad_A, grad_x, grad_b = reverseAD(test_f5, [A, x, b], v)
+    expected_grad_A, expected_grad_x, expected_grad_b = test_f5_vjp(A, x, b, v)
+    match_A = np.allclose(grad_A.value, expected_grad_A.value)
+    match_x = np.allclose(grad_x.value, expected_grad_x.value)
+    match_b = np.allclose(grad_b.value, expected_grad_b.value)
+
+    print(f"Gradient of A: {grad_A}. Matches expected value: {match_A}")
+    print(f"Gradient of x: {grad_x}. Matches expected value: {match_x}")
+    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
+
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
     #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
