@@ -657,9 +657,37 @@ def reverseAD_along_tape(y, call_tape, v, *, gradkey):
 def hvp_by_reverse_reverseAD(
     f: Callable[[list[MyTensor]], MyTensor],
     inputs: list[MyTensor],
-    v_inputs: list[MyTensor],
+    v_vars: list[MyTensor],
+    *,
+    inputs_vars: Union[None, list[MyTensor]] = None,
 ) -> list[MyTensor]:
-    """Use reverse-on-reverse mode AD to calculate the Hessian-vector product of f."""
+    """Calculate the Hessian-vector product of function `f` using
+    reverse-on-reverse mode automatic differentiation.
+
+    Args:
+        f: A function that operates on a list of MyTensor objects and returns a
+            MyTensor result.
+
+        inputs: A list of MyTensor objects representing input parameters for the
+            function `f`.
+
+        v_vars: A list of MyTensor objects corresponding to the vectors for
+            which the Hessian-vector product is calculated.
+
+        inputs_vars: An optional subset of `inputs` specifying independent
+            variables in the Hessian matrix.  `inputs_vars` aligns with the number
+            of tensors in `v_vars`.
+
+    Returns:
+        A list of MyTensor objects representing the Hessian-vector product.
+
+    Note:
+        `inputs_vars` should be a subset of `inputs`, specifically highlighting
+        independent variables in the Hessian matrix.
+    """
+    if inputs_vars is None:
+        inputs_vars = inputs
+
     tape1 = []
     with my_func_tracker.track_func(True, tape=tape1):
         # do computations and track in tape1
@@ -668,13 +696,15 @@ def hvp_by_reverse_reverseAD(
     with my_func_tracker.track_func(True, tape=tape2):
         # compute vector product of grad and v
         reverseAD_along_tape(y, tape1, MyTensor(1.0), gradkey="rrgrad1")
-        grad_inputs = [x.buffer["rrgrad1"] for x in inputs]
+        grad_inputs = [x.buffer["rrgrad1"] for x in inputs_vars]
         yy = MyTensor(0.0)
-        for grad, v in zip(grad_inputs, v_inputs):
+        for grad, v in zip(grad_inputs, v_vars):
             yy += sum(grad * v)
     # apply reverse-mode AD to yy
+    # ATTENTION: we have to use a different gradkey to avoid modifying inputs
+    #            recorded in tape 2
     reverseAD_along_tape(yy, tape1 + tape2, MyTensor(1.0), gradkey="rrgrad2")
-    return [x.buffer["rrgrad2"] for x in inputs]
+    return [x.buffer["rrgrad2"] for x in inputs_vars]
 
 
 def main():
