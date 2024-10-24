@@ -662,6 +662,35 @@ def reverseAD_along_tape(y, call_tape, v, *, gradkey):
             x.buffer[gradkey] += grad
 
 
+def forwardAD(
+    f: Callable[[list[MyTensor]], MyTensor],
+    inputs: list[MyTensor],
+    inputs_v: list[MyTensor],
+    *,
+    gradkey: str = "grad",
+) -> MyTensor:
+    """Use forward-mode AD to compute the Jacobian-vector product of f.
+    Return the gradient of f(dot(v, x)) evaluated at inputs.
+
+    Args
+    ----
+    - `f`: The function to be differentiated.
+
+    - `inputs`: Inputs of `f`.
+
+    - `inputs_v`: A list of tensor matches `inputs`. 
+
+    - `gradkey`: A string used for the dict key. For a given tensor `a`,
+           the grad is stored in `a.buffer[gradkey]`.
+    """
+    tape = []
+    with my_func_tracker.track_func(True, tape=tape):
+        # do computations and track in tape
+        y = f(*inputs)
+    # forward propagate gradient starting at inputs
+    forwardAD_along_tape(inputs, tape, inputs_v, gradkey=gradkey)
+    return y.buffer[gradkey]
+
 
 def forwardAD_along_tape(inputs, call_tape, inputs_v, *, gradkey):
     """Forward propagate gradient starting at inputs. Initially the grad of
