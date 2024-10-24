@@ -615,9 +615,7 @@ def reverseAD(
 
     - `inputs`: Inputs of `f`.
 
-    - `v`: Any tensor matches the dim of `f`. Default to all one tensor.
-           In the default case, this function effectively differentiates
-           the sum of f's components.
+    - `v`: Any tensor matches the dim of `f`. 
 
     - `gradkey`: A string used for the dict key. For a given tensor `a`,
            the grad is stored in `a.buffer[gradkey]`.
