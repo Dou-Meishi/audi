@@ -66,7 +66,7 @@ class MyFuncTracker(object):
         tape is not None, store records in it. Otherwise, store records in
         `self.call_tape`."""
         if tape is None:
-            tape = self.call_tape    # use self.call_tape by default
+            tape = self.call_tape  # use self.call_tape by default
         # store old attributes
         old_do_track, old_call_tape = self.do_track, self.call_tape
         try:
@@ -646,7 +646,9 @@ def reverseAD_along_tape(y, call_tape, v, *, gradkey):
             print(f"\tInputs: {k_inputs}")
 
         # chain rule
-        grad_inputs = k_phi.vjp(k_inputs, k_outputs, k_outputs.buffer[gradkey], **k_kwargs)
+        grad_inputs = k_phi.vjp(
+            k_inputs, k_outputs, k_outputs.buffer[gradkey], **k_kwargs
+        )
         # accumulate grad
         for x, grad in zip(k_inputs, grad_inputs):
             x.buffer[gradkey] += grad
@@ -665,13 +667,13 @@ def hvp_by_reverse_reverseAD(
     tape2 = []
     with my_func_tracker.track_func(True, tape=tape2):
         # compute vector product of grad and v
-        reverseAD_along_tape(y, tape1, MyTensor(1.), gradkey="rrgrad1")
+        reverseAD_along_tape(y, tape1, MyTensor(1.0), gradkey="rrgrad1")
         grad_inputs = [x.buffer["rrgrad1"] for x in inputs]
-        yy = MyTensor(0.)
+        yy = MyTensor(0.0)
         for grad, v in zip(grad_inputs, v_inputs):
             yy += sum(grad * v)
     # apply reverse-mode AD to yy
-    reverseAD_along_tape(yy, tape1 + tape2, MyTensor(1.), gradkey="rrgrad2")
+    reverseAD_along_tape(yy, tape1 + tape2, MyTensor(1.0), gradkey="rrgrad2")
     return [x.buffer["rrgrad2"] for x in inputs]
 
 
@@ -819,7 +821,7 @@ def main():
     def test_f6_vjp(a, b, v):
         s = 1 / (1 + exp(-a))
         grad_a = v * (s - b)
-        grad_b = v * log(1/s - 1)
+        grad_b = v * log(1 / s - 1)
         return grad_a, grad_b
 
     a = MyTensor(np.random.randn(3))
@@ -845,13 +847,13 @@ def main():
         return dot(a, a)
 
     def test_f7_hvp(a, va):
-        return 2 * va,
+        return (2 * va,)
 
     a = MyTensor(np.random.randn(3))
     va = MyTensor(np.random.randn(3))
 
-    hvp_a, = hvp_by_reverse_reverseAD(test_f7, [a], [va])
-    expected_hvp_a, = test_f7_hvp(a, va)
+    (hvp_a,) = hvp_by_reverse_reverseAD(test_f7, [a], [va])
+    (expected_hvp_a,) = test_f7_hvp(a, va)
     match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
 
     print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
