@@ -615,7 +615,7 @@ def reverseAD(
 
     - `inputs`: Inputs of `f`.
 
-    - `v`: Any tensor matches the dim of `f`. 
+    - `v`: Any tensor matches the dim of `f`.
 
     - `gradkey`: A string used for the dict key. For a given tensor `a`,
            the grad is stored in `a.buffer[gradkey]`.
@@ -678,7 +678,7 @@ def forwardAD(
 
     - `inputs`: Inputs of `f`.
 
-    - `inputs_v`: A list of tensor matches `inputs`. 
+    - `inputs_v`: A list of tensor matches `inputs`.
 
     - `gradkey`: A string used for the dict key. For a given tensor `a`,
            the grad is stored in `a.buffer[gradkey]`.
