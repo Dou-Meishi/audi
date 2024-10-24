@@ -645,6 +645,13 @@ def reverseAD_along_tape(y, call_tape, v, *, gradkey):
             print(f"VJP of: {k_phi.name} (with kwargs {k_kwargs})")
             print(f"\tInputs: {k_inputs}")
 
+        if gradkey not in k_outputs.buffer:
+            # this means k_outputs.buffer[gradkey] = 0
+            # however, the VJP of any function with a zero vector returns zero
+            # therefore grad_inputs will contain only zero tensors
+            # so there is no need to accumulate zero into x.buffer[gradkey]
+            continue
+
         # chain rule
         grad_inputs = k_phi.vjp(
             k_inputs, k_outputs, k_outputs.buffer[gradkey], **k_kwargs
