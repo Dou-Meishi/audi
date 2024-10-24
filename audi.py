@@ -1246,7 +1246,7 @@ class Test(object):
 
 
 def main():
-    # ==================================================
+    print("\n==================================================")
     print("Test grad (with reverse-mode AD).")
     Test.test_f1_vjp()
     Test.test_f2_vjp()
@@ -1255,15 +1255,15 @@ def main():
     Test.test_f5_vjp()
     Test.test_f6_vjp()
 
-    # ==================================================
-    print("\nTest grad (with forward-mode AD).")
+    print("\n==================================================")
+    print("Test grad (with forward-mode AD).")
     Test.test_f1_jvp()
     Test.test_f2_jvp()
     Test.test_f4_jvp()
     Test.test_f6_jvp()
 
-    # ==================================================
-    print("\nTest Hessian (with reverse-on-reverse AD).")
+    print("\n==================================================")
+    print("Test Hessian (with reverse-on-reverse AD).")
     Test.test_f7_hvp("rr")
     Test.test_f2_hvp("rr")
     Test.test_f4_hvp("rr")
@@ -1271,8 +1271,8 @@ def main():
     Test.test_f5_hvp_partial("rr")
     Test.test_f8_hvp_partial("rr")
 
-    # ==================================================
-    print("\nTest Hessian (with reverse-on-forward AD).")
+    print("\n==================================================")
+    print("Test Hessian (with reverse-on-forward AD).")
     Test.test_f7_hvp("rf")
     Test.test_f2_hvp("rf")
     Test.test_f4_hvp("rf")
@@ -1280,8 +1280,8 @@ def main():
     Test.test_f5_hvp_partial("rf")
     Test.test_f8_hvp_partial("rf")
 
-    # ==================================================
-    print("\nTest Hessian (with forward-on-reverse AD).")
+    print("\n==================================================")
+    print("Test Hessian (with forward-on-reverse AD).")
     Test.test_f7_hvp("fr")
     Test.test_f2_hvp("fr")
     Test.test_f4_hvp("fr")
