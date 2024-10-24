@@ -838,20 +838,162 @@ def hvp_by_forward_reverseAD(
     return [x.buffer["frgrad2"] for x in yy]
 
 
+class Test(object):
+
+    @staticmethod
+    def f1(a, b):
+        z = a + b
+        z = a * z
+        return z
+
+    @staticmethod
+    def f1_vjp(a, b, v):
+        grad_a = v * (2 * a + b)
+        grad_b = v * a
+        return grad_a, grad_b
+
+    @staticmethod
+    def f1_jvp(a, b, va, vb):
+        grad_a = va * (2 * a + b)
+        grad_b = vb * a
+        return grad_a + grad_b
+
+    @staticmethod
+    def f2(a, b):
+        z = a + b
+        z = a.dot(z)
+        return z
+
+    @staticmethod
+    def f2_vjp(a, b, v):
+        grad_a = v * (2 * a + b)
+        grad_b = v * a
+        return grad_a, grad_b
+
+    @staticmethod
+    def f2_jvp(a, b, va, vb):
+        grad_a = 2 * a + b
+        grad_b = a
+        return dot(grad_a, va) + dot(grad_b, vb)
+
+    @staticmethod
+    def f2_hvp(a, b, va, vb):
+        return vb + 2 * va, va
+
+    @staticmethod
+    def f3(a, k):
+        assert k.ndim == 0
+        z = a + k
+        z = a.dot(z)
+        return z
+
+    @staticmethod
+    def f3_vjp(a, k, v):
+        assert k.ndim == 0
+        grad_a = v * (2 * a + k)
+        grad_k = (v * a).sum()
+        return grad_a, grad_k
+
+    @staticmethod
+    def f4(a, b):
+        z1 = a.dot(a)
+        z2 = a.dot(b)
+        return z1 + z2 - z2.sin()
+
+    @staticmethod
+    def f4_vjp(a, b, v):
+        grad_a = 2 * a + b - b * (a.dot(b).cos())
+        grad_b = a - a * (a.dot(b).cos())
+        return grad_a * v, grad_b * v
+
+    @staticmethod
+    def f4_jvp(a, b, va, vb):
+        grad_a = 2 * a + b - b * (a.dot(b).cos())
+        grad_b = a - a * (a.dot(b).cos())
+        return dot(grad_a, va) + dot(grad_b, vb)
+
+    @staticmethod
+    def f4_hvp(a, b, va, vb):
+        z = dot(a, b)
+        sinz, cosz = sin(z), cos(z)
+        hvp_a = 2 * va + sinz * b * dot(va, b) + vb - vb * cosz + sinz * b * dot(vb, a)
+        hvp_b = va - va * cosz + a * sinz * dot(va, b) + a * sinz * dot(vb, a)
+        return hvp_a, hvp_b
+
+    @staticmethod
+    def f4_hvp_partial(a, b, va):
+        z = dot(a, b)
+        hvp_a = 2 * va + sin(z) * b * dot(va, b)
+        return hvp_a,
+
+    @staticmethod
+    def f5(A, x, b):
+        z = A @ x - b
+        return z.dot(z)
+
+    @staticmethod
+    def f5_vjp(A, x, b, v):
+        z = A @ x - b
+        dA = 2 * z.as_row_vector().T @ x.as_row_vector()
+        dx = 2 * A.T @ z
+        db = -2 * z
+        return dA * v, dx * v, db * v
+
+    @staticmethod
+    def f5_hvp_partial(A, x, b, vx, vb):
+        hvp_x = 2 * A.T @ (A @ vx - vb)
+        hvp_b = 2 * (vb - A @ vx)
+        return hvp_x, hvp_b
+
+    @staticmethod
+    def f6(a, b):
+        s = 1 / (1 + exp(-a))
+        nll = -sum(b * log(s) + (1 - b) * log(1 - s))
+        return nll
+
+    @staticmethod
+    def f6_vjp(a, b, v):
+        s = 1 / (1 + exp(-a))
+        grad_a = v * (s - b)
+        grad_b = v * log(1 / s - 1)
+        return grad_a, grad_b
+
+    @staticmethod
+    def f6_jvp(a, b, va, vb):
+        s = 1 / (1 + exp(-a))
+        grad_a = s - b
+        grad_b = log(1 / s - 1)
+        return dot(grad_a, va) + dot(grad_b, vb)
+
+    @staticmethod
+    def f7(a):
+        return dot(a, a)
+
+    @staticmethod
+    def f7_hvp(a, va):
+        return (2 * va,)
+
+    @staticmethod
+    def f8(X, w, y):
+        a, b = X @ w, y
+        s = 1 / (1 + exp(-a))
+        nll = -sum(b * log(s) + (1 - b) * log(1 - s))
+        return nll
+
+    @staticmethod
+    def f8_hvp_partial(X, w, y, vw):
+        x = X @ w
+        s = 1 / (1 + exp(-x))
+        Omega = s * (1 - s)
+        v = X @ vw
+        return X.T @ (Omega * v),
+
+
 def main():
     print("Test grad.")
     # ==================================================
     print("\nTest with function f(a, b) = a*(a+b)")
 
-    def test_f1(a, b):
-        z = a + b
-        z = a * z
-        return z
-
-    def test_f1_vjp(a, b, v):
-        grad_a = v * (2 * a + b)
-        grad_b = v * a
-        return grad_a, grad_b
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -868,15 +1010,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = Dot(a,a+b)")
 
-    def test_f2(a, b):
-        z = a + b
-        z = a.dot(z)
-        return z
-
-    def test_f2_vjp(a, b, v):
-        grad_a = v * (2 * a + b)
-        grad_b = v * a
-        return grad_a, grad_b
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -893,17 +1026,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, k) = Dot(a,a+k1)")
 
-    def test_f3(a, k):
-        assert k.ndim == 0
-        z = a + k
-        z = a.dot(z)
-        return z
-
-    def test_f3_vjp(a, k, v):
-        assert k.ndim == 0
-        grad_a = v * (2 * a + k)
-        grad_k = (v * a).sum()
-        return grad_a, grad_k
 
     a = MyTensor(np.random.randn(3))
     k = MyTensor(np.asarray(np.random.randn()))
@@ -920,15 +1042,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
 
-    def test_f4(a, b):
-        z1 = a.dot(a)
-        z2 = a.dot(b)
-        return z1 + z2 - z2.sin()
-
-    def test_f4_vjp(a, b, v):
-        grad_a = 2 * a + b - b * (a.dot(b).cos())
-        grad_b = a - a * (a.dot(b).cos())
-        return grad_a * v, grad_b * v
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -945,16 +1058,6 @@ def main():
     # ==================================================
     print("\nTest with function f(A, x, b) = Dot(Ax-b, Ax-b)")
 
-    def test_f5(A, x, b):
-        z = A @ x - b
-        return z.dot(z)
-
-    def test_f5_vjp(A, x, b, v):
-        z = A @ x - b
-        dA = 2 * z.as_row_vector().T @ x.as_row_vector()
-        dx = 2 * A.T @ z
-        db = -2 * z
-        return dA * v, dx * v, db * v
 
     A = MyTensor(np.random.randn(4, 3))
     x = MyTensor(np.random.randn(3))
@@ -974,16 +1077,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = BCEWithLogits(a, b)")
 
-    def test_f6(a, b):
-        s = 1 / (1 + exp(-a))
-        nll = -sum(b * log(s) + (1 - b) * log(1 - s))
-        return nll
-
-    def test_f6_vjp(a, b, v):
-        s = 1 / (1 + exp(-a))
-        grad_a = v * (s - b)
-        grad_b = v * log(1 / s - 1)
-        return grad_a, grad_b
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -1004,11 +1097,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = Dot(a,a)")
 
-    def test_f7(a):
-        return dot(a, a)
-
-    def test_f7_hvp(a, va):
-        return (2 * va,)
 
     a = MyTensor(np.random.randn(3))
     va = MyTensor(np.random.randn(3))
@@ -1022,8 +1110,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = Dot(a,a+b)")
 
-    def test_f2_hvp(a, b, va, vb):
-        return vb + 2 * va, va
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -1041,12 +1127,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = Dot(a,a+b)-Sin(Dot(a,b))")
 
-    def test_f4_hvp(a, b, va, vb):
-        z = dot(a, b)
-        sinz, cosz = sin(z), cos(z)
-        hvp_a = 2 * va + sinz * b * dot(va, b) + vb - vb * cosz + sinz * b * dot(vb, a)
-        hvp_b = va - va * cosz + a * sinz * dot(va, b) + a * sinz * dot(vb, a)
-        return hvp_a, hvp_b
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -1065,10 +1145,6 @@ def main():
     print("\nTest with function f(a) = Dot(a,a+b)-Sin(Dot(a,b))")
     print("\twhere b is a constant.")
 
-    def test_f4_hvp_partial(a, b, va):
-        z = dot(a, b)
-        hvp_a = 2 * va + sin(z) * b * dot(va, b)
-        return hvp_a,
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -1084,10 +1160,6 @@ def main():
     print("\nTest with function f(x, b) = Dot(Ax-b, Ax-b)")
     print("\twhere A is a constant")
 
-    def test_f5_hvp_partial(A, x, b, vx, vb):
-        hvp_x = 2 * A.T @ (A @ vx - vb)
-        hvp_b = 2 * (vb - A @ vx)
-        return hvp_x, hvp_b
 
     A = MyTensor(np.random.randn(4, 3))
     x = MyTensor(np.random.randn(3))
@@ -1107,15 +1179,6 @@ def main():
     print("\nTest with function f(w) = BCEWithLogits(Xw, y)")
     print("\twhere X and y are constants")
 
-    def test_f8(X, w, y):
-        return test_f6(X @ w, y)
-
-    def test_f8_hvp_partial(X, w, y, vw):
-        x = X @ w
-        s = 1 / (1 + exp(-x))
-        Omega = s * (1 - s)
-        v = X @ vw
-        return X.T @ (Omega * v),
 
     X = MyTensor(np.random.randn(3, 4))
     w = MyTensor(np.random.randn(4))
@@ -1135,10 +1198,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = a*(a+b)")
 
-    def test_f1_jvp(a, b, va, vb):
-        grad_a = va * (2 * a + b)
-        grad_b = vb * a
-        return grad_a + grad_b
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -1154,11 +1213,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = Dot(a,a+b)")
 
-    def test_f2_jvp(a, b, va, vb):
-        grad_a = 2 * a + b
-        grad_b = a
-        return dot(grad_a, va) + dot(grad_b, vb)
-
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
     va = MyTensor(np.random.randn(3))
@@ -1173,10 +1227,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
 
-    def test_f4_jvp(a, b, va, vb):
-        grad_a = 2 * a + b - b * (a.dot(b).cos())
-        grad_b = a - a * (a.dot(b).cos())
-        return dot(grad_a, va) + dot(grad_b, vb)
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
@@ -1192,11 +1242,6 @@ def main():
     # ==================================================
     print("\nTest with function f(a, b) = BCEWithLogits(a,b)")
 
-    def test_f6_jvp(a, b, va, vb):
-        s = 1 / (1 + exp(-a))
-        grad_a = s - b
-        grad_b = log(1 / s - 1)
-        return dot(grad_a, va) + dot(grad_b, vb)
 
     a = MyTensor(np.random.randn(3))
     b = MyTensor(np.random.randn(3))
