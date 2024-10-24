@@ -1165,6 +1165,22 @@ def main():
 
     print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
 
+    # ==================================================
+    # ==================================================
+
+    print("\n\nTest Hessian (with reverse-on-forward AD).")
+    # ==================================================
+    print("\nTest with function f(a, b) = Dot(a,a)")
+
+    a = MyTensor(np.random.randn(3))
+    va = MyTensor(np.random.randn(3))
+
+    (hvp_a,) = hvp_by_reverse_forwardAD(test_f7, [a], [va])
+    (expected_hvp_a,) = test_f7_hvp(a, va)
+    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
+
+    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
+
 
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
