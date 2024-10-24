@@ -710,6 +710,18 @@ def forwardAD_along_tape(inputs, call_tape, inputs_v, *, gradkey):
         )
 
 
+def hvp_by_AD(*args, mode: str = "rr" ,**kwargs):
+    """Calculate the Hessian-vector by automatic differentiation."""
+    if mode == "rr":
+        return hvp_by_reverse_reverseAD(*args, **kwargs)
+    elif mode == "rf":
+        return hvp_by_reverse_forwardAD(*args, **kwargs)
+    elif mode == "fr":
+        return hvp_by_forward_reverseAD(*args, **kwargs)
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
+
+
 def hvp_by_reverse_reverseAD(
     f: Callable[[list[MyTensor]], MyTensor],
     inputs: list[MyTensor],
