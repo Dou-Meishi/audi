@@ -695,7 +695,7 @@ def forwardAD(
 def forwardAD_along_tape(inputs, call_tape, inputs_v, *, gradkey):
     """Forward propagate gradient starting at inputs. Initially the grad of
     inputs is set to inputs_v.  `gradkey` is a string used for the dict key. For
-    a given tensor `a`, the grad is stored in `a.buffer[gradkey]` """
+    a given tensor `a`, the grad is stored in `a.buffer[gradkey]`"""
     for x, v in zip(inputs, inputs_v):
         x.buffer[gradkey] = v
     for k_inputs, k_outputs, k_phi, k_kwargs in call_tape:
@@ -710,7 +710,7 @@ def forwardAD_along_tape(inputs, call_tape, inputs_v, *, gradkey):
         )
 
 
-def hvp_by_AD(*args, mode: str = "rr" ,**kwargs):
+def hvp_by_AD(*args, mode: str = "rr", **kwargs):
     """Calculate the Hessian-vector by automatic differentiation."""
     if mode == "rr":
         return hvp_by_reverse_reverseAD(*args, **kwargs)
@@ -839,7 +839,6 @@ def hvp_by_forward_reverseAD(
 
 
 class Test(object):
-
     @staticmethod
     def f1(a, b):
         z = a + b
@@ -924,7 +923,7 @@ class Test(object):
     def f4_hvp_partial(a, b, va):
         z = dot(a, b)
         hvp_a = 2 * va + sin(z) * b * dot(va, b)
-        return hvp_a,
+        return (hvp_a,)
 
     @staticmethod
     def f5(A, x, b):
@@ -986,7 +985,7 @@ class Test(object):
         s = 1 / (1 + exp(-x))
         Omega = s * (1 - s)
         v = X @ vw
-        return X.T @ (Omega * v),
+        return (X.T @ (Omega * v),)
 
     @staticmethod
     def test_f1_vjp():
@@ -1203,8 +1202,8 @@ class Test(object):
         b = MyTensor(np.random.randn(3))
         va = MyTensor(np.random.randn(3))
 
-        hvp_a, = hvp_by_AD(Test.f4, [a, b], [va], inputs_vars=[a], mode=mode)
-        expected_hvp_a, = Test.f4_hvp_partial(a, b, va)
+        (hvp_a,) = hvp_by_AD(Test.f4, [a, b], [va], inputs_vars=[a], mode=mode)
+        (expected_hvp_a,) = Test.f4_hvp_partial(a, b, va)
         match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
 
         print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
@@ -1220,7 +1219,9 @@ class Test(object):
         vx = MyTensor(np.random.randn(3))
         vb = MyTensor(np.random.randn(4))
 
-        hvp_x, hvp_b = hvp_by_AD(Test.f5, [A, x, b], [vx, vb], inputs_vars=[x, b], mode=mode)
+        hvp_x, hvp_b = hvp_by_AD(
+            Test.f5, [A, x, b], [vx, vb], inputs_vars=[x, b], mode=mode
+        )
         expected_hvp_x, expected_hvp_b = Test.f5_hvp_partial(A, x, b, vx, vb)
         match_hvp_x = np.allclose(hvp_x.value, expected_hvp_x.value)
         match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
@@ -1238,8 +1239,8 @@ class Test(object):
         y = MyTensor(np.random.randn(3))
         vw = MyTensor(np.random.randn(4))
 
-        hvp_w, = hvp_by_AD(Test.f8, [X, w, y], [vw], inputs_vars=[w], mode=mode)
-        expected_hvp_w, = Test.f8_hvp_partial(X, w, y, vw)
+        (hvp_w,) = hvp_by_AD(Test.f8, [X, w, y], [vw], inputs_vars=[w], mode=mode)
+        (expected_hvp_w,) = Test.f8_hvp_partial(X, w, y, vw)
         match_hvp_w = np.allclose(hvp_w.value, expected_hvp_w.value)
 
         print(f"HVP of w: {hvp_w}. Matches expected value: {match_hvp_w}")
