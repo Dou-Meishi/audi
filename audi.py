@@ -1246,58 +1246,48 @@ class Test(object):
 
 
 def main():
-    print("Test grad.")
     # ==================================================
+    print("Test grad (with reverse-mode AD).")
+    Test.test_f1_vjp()
+    Test.test_f2_vjp()
+    Test.test_f3_vjp()
+    Test.test_f4_vjp()
+    Test.test_f5_vjp()
+    Test.test_f6_vjp()
 
     # ==================================================
+    print("\nTest grad (with forward-mode AD).")
+    Test.test_f1_jvp()
+    Test.test_f2_jvp()
+    Test.test_f4_jvp()
+    Test.test_f6_jvp()
 
     # ==================================================
+    print("\nTest Hessian (with reverse-on-reverse AD).")
+    Test.test_f7_hvp("rr")
+    Test.test_f2_hvp("rr")
+    Test.test_f4_hvp("rr")
+    Test.test_f4_hvp_partial("rr")
+    Test.test_f5_hvp_partial("rr")
+    Test.test_f8_hvp_partial("rr")
 
     # ==================================================
+    print("\nTest Hessian (with reverse-on-forward AD).")
+    Test.test_f7_hvp("rf")
+    Test.test_f2_hvp("rf")
+    Test.test_f4_hvp("rf")
+    Test.test_f4_hvp_partial("rf")
+    Test.test_f5_hvp_partial("rf")
+    Test.test_f8_hvp_partial("rf")
 
     # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-    # ==================================================
-
-    print("\n\nTest Hessian.")
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-    # ==================================================
-
-    print("\nTest grad (with forward AD).")
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-
-    # ==================================================
-    # ==================================================
-
-    print("\n\nTest Hessian (with reverse-on-forward AD).")
-    # ==================================================
-
-    # ==================================================
-    # ==================================================
-
-    print("\n\nTest Hessian (with forward-on-reverse AD).")
-    # ==================================================
+    print("\nTest Hessian (with forward-on-reverse AD).")
+    Test.test_f7_hvp("fr")
+    Test.test_f2_hvp("fr")
+    Test.test_f4_hvp("fr")
+    Test.test_f4_hvp_partial("fr")
+    Test.test_f5_hvp_partial("fr")
+    Test.test_f8_hvp_partial("fr")
 
 
 if __name__ == "__main__":
