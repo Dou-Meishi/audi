@@ -664,6 +664,25 @@ def reverseAD_along_tape(y, call_tape, v, *, gradkey):
             x.buffer[gradkey] += grad
 
 
+
+def forwardAD_along_tape(inputs, call_tape, inputs_v, *, gradkey):
+    """Forward propagate gradient starting at inputs. Initially the grad of
+    inputs is set to inputs_v.  `gradkey` is a string used for the dict key. For
+    a given tensor `a`, the grad is stored in `a.buffer[gradkey]` """
+    for x, v in zip(inputs, inputs_v):
+        x.buffer[gradkey] = v
+    for k_inputs, k_outputs, k_phi, k_kwargs in call_tape:
+        if my_func_tracker.debug > 0:
+            print(f"JVP of: {k_phi.name} (with kwargs {k_kwargs})")
+            print(f"\tInputs: {k_inputs}")
+
+        # chain rule
+        grad_inputs = [x.buffer[gradkey] for x in k_inputs]
+        k_outputs.buffer[gradkey] = k_phi.jvp(
+            k_inputs, k_outputs, grad_inputs, **k_kwargs
+        )
+
+
 def hvp_by_reverse_reverseAD(
     f: Callable[[list[MyTensor]], MyTensor],
     inputs: list[MyTensor],
