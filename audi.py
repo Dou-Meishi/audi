@@ -1076,6 +1076,25 @@ def main():
 
     print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
 
+    # ==================================================
+    print("\nTest with function f(a, b) = Dot(a,a+b)")
+
+    def test_f2_jvp(a, b, va, vb):
+        grad_a = 2 * a + b
+        grad_b = a
+        return dot(grad_a, va) + dot(grad_b, vb)
+
+    a = MyTensor(np.random.randn(3))
+    b = MyTensor(np.random.randn(3))
+    va = MyTensor(np.random.randn(3))
+    vb = MyTensor(np.random.randn(3))
+
+    grad_L = forwardAD(test_f2, [a, b], [va, vb])
+    expected_grad_L = test_f2_jvp(a, b, va, vb)
+    match_L = np.allclose(grad_L.value, expected_grad_L.value)
+
+    print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
+
 
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
