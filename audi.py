@@ -1053,6 +1053,30 @@ def main():
 
     print(f"HVP of w: {hvp_w}. Matches expected value: {match_hvp_w}")
 
+    # ==================================================
+    # ==================================================
+
+    print("\nTest grad (with forward AD).")
+    # ==================================================
+    print("\nTest with function f(a, b) = a*(a+b)")
+
+    def test_f1_jvp(a, b, va, vb):
+        grad_a = va * (2 * a + b)
+        grad_b = vb * a
+        return grad_a + grad_b
+
+    a = MyTensor(np.random.randn(3))
+    b = MyTensor(np.random.randn(3))
+    va = MyTensor(np.random.randn(3))
+    vb = MyTensor(np.random.randn(3))
+
+    grad_L = forwardAD(test_f1, [a, b], [va, vb])
+    expected_grad_L = test_f1_jvp(a, b, va, vb)
+    match_L = np.allclose(grad_L.value, expected_grad_L.value)
+
+    print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
+
+
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
     #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
