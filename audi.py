@@ -988,439 +988,316 @@ class Test(object):
         v = X @ vw
         return X.T @ (Omega * v),
 
+    @staticmethod
+    def test_f1_vjp():
+        print("\nTest with function f(a, b) = a*(a+b)")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        v = MyTensor(np.random.randn(3))
+
+        grad_a, grad_b = reverseAD(Test.f1, [a, b], v)
+        expected_grad_a, expected_grad_b = Test.f1_vjp(a, b, v)
+        match_a = np.allclose(grad_a.value, expected_grad_a.value)
+        match_b = np.allclose(grad_b.value, expected_grad_b.value)
+
+        print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
+        print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
+
+    @staticmethod
+    def test_f2_vjp():
+        print("\nTest with function f(a, b) = Dot(a,a+b)")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        v = MyTensor(np.asarray(np.random.randn()))
+
+        grad_a, grad_b = reverseAD(Test.f2, [a, b], v)
+        expected_grad_a, expected_grad_b = Test.f2_vjp(a, b, v)
+        match_a = np.allclose(grad_a.value, expected_grad_a.value)
+        match_b = np.allclose(grad_b.value, expected_grad_b.value)
+
+        print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
+        print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
+
+    @staticmethod
+    def test_f3_vjp():
+        print("\nTest with function f(a, k) = Dot(a,a+k1)")
+
+        a = MyTensor(np.random.randn(3))
+        k = MyTensor(np.asarray(np.random.randn()))
+        v = MyTensor(np.asarray(np.random.randn()))
+
+        grad_a, grad_k = reverseAD(Test.f3, [a, k], v)
+        expected_grad_a, expected_grad_k = Test.f3_vjp(a, k, v)
+        match_a = np.allclose(grad_a.value, expected_grad_a.value)
+        match_k = np.allclose(grad_k.value, expected_grad_k.value)
+
+        print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
+        print(f"Gradient of k: {grad_k}. Matches expected value: {match_k}")
+
+    @staticmethod
+    def test_f4_vjp():
+        print("\nTest with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        v = MyTensor(np.asarray(np.random.randn()))
+
+        grad_a, grad_b = reverseAD(Test.f4, [a, b], v)
+        expected_grad_a, expected_grad_b = Test.f4_vjp(a, b, v)
+        match_a = np.allclose(grad_a.value, expected_grad_a.value)
+        match_b = np.allclose(grad_b.value, expected_grad_b.value)
+
+        print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
+        print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
+
+    @staticmethod
+    def test_f5_vjp():
+        print("\nTest with function f(A, x, b) = Dot(Ax-b, Ax-b)")
+
+        A = MyTensor(np.random.randn(4, 3))
+        x = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(4))
+        v = MyTensor(np.asarray(np.random.randn()))
+
+        grad_A, grad_x, grad_b = reverseAD(Test.f5, [A, x, b], v)
+        expected_grad_A, expected_grad_x, expected_grad_b = Test.f5_vjp(A, x, b, v)
+        match_A = np.allclose(grad_A.value, expected_grad_A.value)
+        match_x = np.allclose(grad_x.value, expected_grad_x.value)
+        match_b = np.allclose(grad_b.value, expected_grad_b.value)
+
+        print(f"Gradient of A: {grad_A}. Matches expected value: {match_A}")
+        print(f"Gradient of x: {grad_x}. Matches expected value: {match_x}")
+        print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
+
+    @staticmethod
+    def test_f6_vjp():
+        print("\nTest with function f(a, b) = BCEWithLogits(a, b)")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        v = MyTensor(np.asarray(np.random.randn()))
+
+        grad_a, grad_b = reverseAD(Test.f6, [a, b], v)
+        expected_grad_a, expected_grad_b = Test.f6_vjp(a, b, v)
+        match_a = np.allclose(grad_a.value, expected_grad_a.value)
+        match_b = np.allclose(grad_b.value, expected_grad_b.value)
+
+        print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
+        print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
+
+    @staticmethod
+    def test_f1_jvp():
+        print("\nTest with function f(a, b) = a*(a+b)")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+        vb = MyTensor(np.random.randn(3))
+
+        grad_L = forwardAD(Test.f1, [a, b], [va, vb])
+        expected_grad_L = Test.f1_jvp(a, b, va, vb)
+        match_L = np.allclose(grad_L.value, expected_grad_L.value)
+
+        print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
+
+    @staticmethod
+    def test_f2_jvp():
+        print("\nTest with function f(a, b) = Dot(a,a+b)")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+        vb = MyTensor(np.random.randn(3))
+
+        grad_L = forwardAD(Test.f2, [a, b], [va, vb])
+        expected_grad_L = Test.f2_jvp(a, b, va, vb)
+        match_L = np.allclose(grad_L.value, expected_grad_L.value)
+
+        print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
+
+    @staticmethod
+    def test_f4_jvp():
+        print("\nTest with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+        vb = MyTensor(np.random.randn(3))
+
+        grad_L = forwardAD(Test.f4, [a, b], [va, vb])
+        expected_grad_L = Test.f4_jvp(a, b, va, vb)
+        match_L = np.allclose(grad_L.value, expected_grad_L.value)
+
+        print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
+
+    @staticmethod
+    def test_f6_jvp():
+        print("\nTest with function f(a, b) = BCEWithLogits(a,b)")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+        vb = MyTensor(np.random.randn(3))
+
+        grad_L = forwardAD(Test.f6, [a, b], [va, vb])
+        expected_grad_L = Test.f6_jvp(a, b, va, vb)
+        match_L = np.allclose(grad_L.value, expected_grad_L.value)
+
+        print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
+
+    @staticmethod
+    def test_f7_hvp(mode):
+        print("\nTest with function f(a, b) = Dot(a,a)")
+
+        a = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+
+        (hvp_a,) = hvp_by_AD(Test.f7, [a], [va], mode=mode)
+        (expected_hvp_a,) = Test.f7_hvp(a, va)
+        match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
+
+        print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
+
+    @staticmethod
+    def test_f2_hvp(mode):
+        print("\nTest with function f(a, b) = Dot(a,a+b)")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+        vb = MyTensor(np.random.randn(3))
+
+        hvp_a, hvp_b = hvp_by_AD(Test.f2, [a, b], [va, vb], mode=mode)
+        expected_hvp_a, expected_hvp_b = Test.f2_hvp(a, b, va, vb)
+        match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
+        match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
+
+        print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
+        print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
+
+    @staticmethod
+    def test_f4_hvp(mode):
+        print("\nTest with function f(a, b) = Dot(a,a+b)-Sin(Dot(a,b))")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+        vb = MyTensor(np.random.randn(3))
+
+        hvp_a, hvp_b = hvp_by_AD(Test.f4, [a, b], [va, vb], mode=mode)
+        expected_hvp_a, expected_hvp_b = Test.f4_hvp(a, b, va, vb)
+        match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
+        match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
+
+        print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
+        print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
+
+    @staticmethod
+    def test_f4_hvp_partial(mode):
+        print("\nTest with function f(a) = Dot(a,a+b)-Sin(Dot(a,b))")
+        print("\twhere b is a constant.")
+
+        a = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(3))
+        va = MyTensor(np.random.randn(3))
+
+        hvp_a, = hvp_by_AD(Test.f4, [a, b], [va], inputs_vars=[a], mode=mode)
+        expected_hvp_a, = Test.f4_hvp_partial(a, b, va)
+        match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
+
+        print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
+
+    @staticmethod
+    def test_f5_hvp_partial(mode):
+        print("\nTest with function f(x, b) = Dot(Ax-b, Ax-b)")
+        print("\twhere A is a constant")
+
+        A = MyTensor(np.random.randn(4, 3))
+        x = MyTensor(np.random.randn(3))
+        b = MyTensor(np.random.randn(4))
+        vx = MyTensor(np.random.randn(3))
+        vb = MyTensor(np.random.randn(4))
+
+        hvp_x, hvp_b = hvp_by_AD(Test.f5, [A, x, b], [vx, vb], inputs_vars=[x, b], mode=mode)
+        expected_hvp_x, expected_hvp_b = Test.f5_hvp_partial(A, x, b, vx, vb)
+        match_hvp_x = np.allclose(hvp_x.value, expected_hvp_x.value)
+        match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
+
+        print(f"HVP of a: {hvp_x}. Matches expected value: {match_hvp_x}")
+        print(f"HVP of a: {hvp_b}. Matches expected value: {match_hvp_b}")
+
+    @staticmethod
+    def test_f8_hvp_partial(mode):
+        print("\nTest with function f(w) = BCEWithLogits(Xw, y)")
+        print("\twhere X and y are constants")
+
+        X = MyTensor(np.random.randn(3, 4))
+        w = MyTensor(np.random.randn(4))
+        y = MyTensor(np.random.randn(3))
+        vw = MyTensor(np.random.randn(4))
+
+        hvp_w, = hvp_by_AD(Test.f8, [X, w, y], [vw], inputs_vars=[w], mode=mode)
+        expected_hvp_w, = Test.f8_hvp_partial(X, w, y, vw)
+        match_hvp_w = np.allclose(hvp_w.value, expected_hvp_w.value)
+
+        print(f"HVP of w: {hvp_w}. Matches expected value: {match_hvp_w}")
+
 
 def main():
     print("Test grad.")
     # ==================================================
-    print("\nTest with function f(a, b) = a*(a+b)")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    v = MyTensor(np.random.randn(3))
-
-    grad_a, grad_b = reverseAD(test_f1, [a, b], v)
-    expected_grad_a, expected_grad_b = test_f1_vjp(a, b, v)
-    match_a = np.allclose(grad_a.value, expected_grad_a.value)
-    match_b = np.allclose(grad_b.value, expected_grad_b.value)
-
-    print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
-    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    v = MyTensor(np.asarray(np.random.randn()))
-
-    grad_a, grad_b = reverseAD(test_f2, [a, b], v)
-    expected_grad_a, expected_grad_b = test_f2_vjp(a, b, v)
-    match_a = np.allclose(grad_a.value, expected_grad_a.value)
-    match_b = np.allclose(grad_b.value, expected_grad_b.value)
-
-    print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
-    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
-    print("\nTest with function f(a, k) = Dot(a,a+k1)")
-
-
-    a = MyTensor(np.random.randn(3))
-    k = MyTensor(np.asarray(np.random.randn()))
-    v = MyTensor(np.asarray(np.random.randn()))
-
-    grad_a, grad_k = reverseAD(test_f3, [a, k], v)
-    expected_grad_a, expected_grad_k = test_f3_vjp(a, k, v)
-    match_a = np.allclose(grad_a.value, expected_grad_a.value)
-    match_k = np.allclose(grad_k.value, expected_grad_k.value)
-
-    print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
-    print(f"Gradient of k: {grad_k}. Matches expected value: {match_k}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    v = MyTensor(np.asarray(np.random.randn()))
-
-    grad_a, grad_b = reverseAD(test_f4, [a, b], v)
-    expected_grad_a, expected_grad_b = test_f4_vjp(a, b, v)
-    match_a = np.allclose(grad_a.value, expected_grad_a.value)
-    match_b = np.allclose(grad_b.value, expected_grad_b.value)
-
-    print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
-    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
-    print("\nTest with function f(A, x, b) = Dot(Ax-b, Ax-b)")
-
-
-    A = MyTensor(np.random.randn(4, 3))
-    x = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(4))
-    v = MyTensor(np.asarray(np.random.randn()))
-
-    grad_A, grad_x, grad_b = reverseAD(test_f5, [A, x, b], v)
-    expected_grad_A, expected_grad_x, expected_grad_b = test_f5_vjp(A, x, b, v)
-    match_A = np.allclose(grad_A.value, expected_grad_A.value)
-    match_x = np.allclose(grad_x.value, expected_grad_x.value)
-    match_b = np.allclose(grad_b.value, expected_grad_b.value)
-
-    print(f"Gradient of A: {grad_A}. Matches expected value: {match_A}")
-    print(f"Gradient of x: {grad_x}. Matches expected value: {match_x}")
-    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = BCEWithLogits(a, b)")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    v = MyTensor(np.asarray(np.random.randn()))
-
-    grad_a, grad_b = reverseAD(test_f6, [a, b], v)
-    expected_grad_a, expected_grad_b = test_f6_vjp(a, b, v)
-    match_a = np.allclose(grad_a.value, expected_grad_a.value)
-    match_b = np.allclose(grad_b.value, expected_grad_b.value)
-
-    print(f"Gradient of a: {grad_a}. Matches expected value: {match_a}")
-    print(f"Gradient of b: {grad_b}. Matches expected value: {match_b}")
 
     # ==================================================
     # ==================================================
 
     print("\n\nTest Hessian.")
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a)")
-
-
-    a = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-
-    (hvp_a,) = hvp_by_reverse_reverseAD(test_f7, [a], [va])
-    (expected_hvp_a,) = test_f7_hvp(a, va)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    hvp_a, hvp_b = hvp_by_reverse_reverseAD(test_f2, [a, b], [va, vb])
-    expected_hvp_a, expected_hvp_b = test_f2_hvp(a, b, va, vb)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-    print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)-Sin(Dot(a,b))")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    hvp_a, hvp_b = hvp_by_reverse_reverseAD(test_f4, [a, b], [va, vb])
-    expected_hvp_a, expected_hvp_b = test_f4_hvp(a, b, va, vb)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-    print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
 
     # ==================================================
-    print("\nTest with function f(a) = Dot(a,a+b)-Sin(Dot(a,b))")
-    print("\twhere b is a constant.")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-
-    hvp_a, = hvp_by_reverse_reverseAD(test_f4, [a, b], [va], inputs_vars=[a])
-    expected_hvp_a, = test_f4_hvp_partial(a, b, va)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
 
     # ==================================================
-    print("\nTest with function f(x, b) = Dot(Ax-b, Ax-b)")
-    print("\twhere A is a constant")
-
-
-    A = MyTensor(np.random.randn(4, 3))
-    x = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(4))
-    vx = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(4))
-
-    hvp_x, hvp_b = hvp_by_reverse_reverseAD(test_f5, [A, x, b], [vx, vb], inputs_vars=[x, b])
-    expected_hvp_x, expected_hvp_b = test_f5_hvp_partial(A, x, b, vx, vb)
-    match_hvp_x = np.allclose(hvp_x.value, expected_hvp_x.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_x}. Matches expected value: {match_hvp_x}")
-    print(f"HVP of a: {hvp_b}. Matches expected value: {match_hvp_b}")
 
     # ==================================================
-    print("\nTest with function f(w) = BCEWithLogits(Xw, y)")
-    print("\twhere X and y are constants")
-
-
-    X = MyTensor(np.random.randn(3, 4))
-    w = MyTensor(np.random.randn(4))
-    y = MyTensor(np.random.randn(3))
-    vw = MyTensor(np.random.randn(4))
-
-    hvp_w, = hvp_by_reverse_reverseAD(test_f8, [X, w, y], [vw], inputs_vars=[w])
-    expected_hvp_w, = test_f8_hvp_partial(X, w, y, vw)
-    match_hvp_w = np.allclose(hvp_w.value, expected_hvp_w.value)
-
-    print(f"HVP of w: {hvp_w}. Matches expected value: {match_hvp_w}")
 
     # ==================================================
     # ==================================================
 
     print("\nTest grad (with forward AD).")
     # ==================================================
-    print("\nTest with function f(a, b) = a*(a+b)")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    grad_L = forwardAD(test_f1, [a, b], [va, vb])
-    expected_grad_L = test_f1_jvp(a, b, va, vb)
-    match_L = np.allclose(grad_L.value, expected_grad_L.value)
-
-    print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)")
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    grad_L = forwardAD(test_f2, [a, b], [va, vb])
-    expected_grad_L = test_f2_jvp(a, b, va, vb)
-    match_L = np.allclose(grad_L.value, expected_grad_L.value)
-
-    print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a)+Dot(a,b)-Sin(Dot(a,b))")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    grad_L = forwardAD(test_f4, [a, b], [va, vb])
-    expected_grad_L = test_f4_jvp(a, b, va, vb)
-    match_L = np.allclose(grad_L.value, expected_grad_L.value)
-
-    print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
 
     # ==================================================
-    print("\nTest with function f(a, b) = BCEWithLogits(a,b)")
-
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    grad_L = forwardAD(test_f6, [a, b], [va, vb])
-    expected_grad_L = test_f6_jvp(a, b, va, vb)
-    match_L = np.allclose(grad_L.value, expected_grad_L.value)
-
-    print(f"Gradient of f: {grad_L}. Matches expected value: {match_L}")
 
     # ==================================================
     # ==================================================
 
     print("\n\nTest Hessian (with reverse-on-forward AD).")
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a)")
-
-    a = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-
-    (hvp_a,) = hvp_by_reverse_forwardAD(test_f7, [a], [va])
-    (expected_hvp_a,) = test_f7_hvp(a, va)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-
-    # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)")
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    hvp_a, hvp_b = hvp_by_reverse_forwardAD(test_f2, [a, b], [va, vb])
-    expected_hvp_a, expected_hvp_b = test_f2_hvp(a, b, va, vb)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-    print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
-
-    # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)-Sin(Dot(a,b))")
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    hvp_a, hvp_b = hvp_by_reverse_forwardAD(test_f4, [a, b], [va, vb])
-    expected_hvp_a, expected_hvp_b = test_f4_hvp(a, b, va, vb)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-    print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
-
-    # ==================================================
-    print("\nTest with function f(x, b) = Dot(Ax-b, Ax-b)")
-    print("\twhere A is a constant")
-
-    A = MyTensor(np.random.randn(4, 3))
-    x = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(4))
-    vx = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(4))
-
-    hvp_x, hvp_b = hvp_by_reverse_forwardAD(test_f5, [A, x, b], [vx, vb], inputs_vars=[x, b])
-    expected_hvp_x, expected_hvp_b = test_f5_hvp_partial(A, x, b, vx, vb)
-    match_hvp_x = np.allclose(hvp_x.value, expected_hvp_x.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_x}. Matches expected value: {match_hvp_x}")
-    print(f"HVP of a: {hvp_b}. Matches expected value: {match_hvp_b}")
-
-    # ==================================================
-    print("\nTest with function f(w) = BCEWithLogits(Xw, y)")
-    print("\twhere X and y are constants")
-
-    X = MyTensor(np.random.randn(3, 4))
-    w = MyTensor(np.random.randn(4))
-    y = MyTensor(np.random.randn(3))
-    vw = MyTensor(np.random.randn(4))
-
-    hvp_w, = hvp_by_reverse_forwardAD(test_f8, [X, w, y], [vw], inputs_vars=[w])
-    expected_hvp_w, = test_f8_hvp_partial(X, w, y, vw)
-    match_hvp_w = np.allclose(hvp_w.value, expected_hvp_w.value)
-
-    print(f"HVP of w: {hvp_w}. Matches expected value: {match_hvp_w}")
 
     # ==================================================
     # ==================================================
 
     print("\n\nTest Hessian (with forward-on-reverse AD).")
     # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a)")
-
-    a = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-
-    (hvp_a,) = hvp_by_forward_reverseAD(test_f7, [a], [va])
-    (expected_hvp_a,) = test_f7_hvp(a, va)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-
-    # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)")
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    hvp_a, hvp_b = hvp_by_forward_reverseAD(test_f2, [a, b], [va, vb])
-    expected_hvp_a, expected_hvp_b = test_f2_hvp(a, b, va, vb)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-    print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
-
-    # ==================================================
-    print("\nTest with function f(a, b) = Dot(a,a+b)-Sin(Dot(a,b))")
-
-    a = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(3))
-    va = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(3))
-
-    hvp_a, hvp_b = hvp_by_forward_reverseAD(test_f4, [a, b], [va, vb])
-    expected_hvp_a, expected_hvp_b = test_f4_hvp(a, b, va, vb)
-    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
-    print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
-
-    # ==================================================
-    print("\nTest with function f(x, b) = Dot(Ax-b, Ax-b)")
-    print("\twhere A is a constant")
-
-    A = MyTensor(np.random.randn(4, 3))
-    x = MyTensor(np.random.randn(3))
-    b = MyTensor(np.random.randn(4))
-    vx = MyTensor(np.random.randn(3))
-    vb = MyTensor(np.random.randn(4))
-
-    hvp_x, hvp_b = hvp_by_forward_reverseAD(test_f5, [A, x, b], [vx, vb], inputs_vars=[x, b])
-    expected_hvp_x, expected_hvp_b = test_f5_hvp_partial(A, x, b, vx, vb)
-    match_hvp_x = np.allclose(hvp_x.value, expected_hvp_x.value)
-    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
-
-    print(f"HVP of a: {hvp_x}. Matches expected value: {match_hvp_x}")
-    print(f"HVP of a: {hvp_b}. Matches expected value: {match_hvp_b}")
-
-    # ==================================================
-    print("\nTest with function f(w) = BCEWithLogits(Xw, y)")
-    print("\twhere X and y are constants")
-
-    X = MyTensor(np.random.randn(3, 4))
-    w = MyTensor(np.random.randn(4))
-    y = MyTensor(np.random.randn(3))
-    vw = MyTensor(np.random.randn(4))
-
-    hvp_w, = hvp_by_forward_reverseAD(test_f8, [X, w, y], [vw], inputs_vars=[w])
-    expected_hvp_w, = test_f8_hvp_partial(X, w, y, vw)
-    match_hvp_w = np.allclose(hvp_w.value, expected_hvp_w.value)
-
-    print(f"HVP of w: {hvp_w}. Matches expected value: {match_hvp_w}")
-
-    # examine computation history
-    # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
-    #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
-    #     print(f"\tInputs: {call_inputs}")
-    #     print(f"\tOutput: {call_output}")
 
 
 if __name__ == "__main__":
