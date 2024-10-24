@@ -956,6 +956,29 @@ def main():
 
     print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
 
+    # ==================================================
+    print("\nTest with function f(x, b) = Dot(Ax-b, Ax-b)")
+    print("\twhere A is a constant")
+
+    def test_f5_hvp_partial(A, x, b, vx, vb):
+        hvp_x = 2 * A.T @ (A @ vx - vb)
+        hvp_b = 2 * (vb - A @ vx)
+        return hvp_x, hvp_b
+
+    A = MyTensor(np.random.randn(4, 3))
+    x = MyTensor(np.random.randn(3))
+    b = MyTensor(np.random.randn(4))
+    vx = MyTensor(np.random.randn(3))
+    vb = MyTensor(np.random.randn(4))
+
+    hvp_x, hvp_b = hvp_by_reverse_reverseAD(test_f5, [A, x, b], [vx, vb], inputs_vars=[x, b])
+    expected_hvp_x, expected_hvp_b = test_f5_hvp_partial(A, x, b, vx, vb)
+    match_hvp_x = np.allclose(hvp_x.value, expected_hvp_x.value)
+    match_hvp_b = np.allclose(hvp_b.value, expected_hvp_b.value)
+
+    print(f"HVP of a: {hvp_x}. Matches expected value: {match_hvp_x}")
+    print(f"HVP of a: {hvp_b}. Matches expected value: {match_hvp_b}")
+
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
     #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
