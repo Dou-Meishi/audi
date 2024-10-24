@@ -763,6 +763,37 @@ def hvp_by_reverse_reverseAD(
     return [x.buffer["rrgrad2"] for x in inputs_vars]
 
 
+def hvp_by_reverse_forwardAD(
+    f: Callable[[list[MyTensor]], MyTensor],
+    inputs: list[MyTensor],
+    v_vars: list[MyTensor],
+    *,
+    inputs_vars: Union[None, list[MyTensor]] = None,
+) -> list[MyTensor]:
+    """Calculate the Hessian-vector product of function `f` using
+    reverse-on-forward mode automatic differentiation.
+
+    See hvp_by_reverse_reverseAD for explanation of arguments.
+    """
+    if inputs_vars is None:
+        inputs_vars = inputs
+
+    tape1 = []
+    with my_func_tracker.track_func(True, tape=tape1):
+        # do computations and track in tape1
+        y = f(*inputs)
+    tape2 = []
+    with my_func_tracker.track_func(True, tape=tape2):
+        # compute vector product of grad and v
+        forwardAD_along_tape(inputs_vars, tape1, v_vars, gradkey="rfgrad1")
+        yy = y.buffer["rfgrad1"]
+    # apply reverse-mode AD to yy
+    # ATTENTION: we have to use a different gradkey to avoid modifying inputs
+    #            recorded in tape 2
+    reverseAD_along_tape(yy, tape1 + tape2, MyTensor(1.0), gradkey="rfgrad2")
+    return [x.buffer["rfgrad2"] for x in inputs_vars]
+
+
 def main():
     print("Test grad.")
     # ==================================================
