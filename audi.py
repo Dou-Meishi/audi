@@ -937,6 +937,25 @@ def main():
     print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
     print(f"HVP of b: {hvp_b}. Matches expected value: {match_hvp_b}")
 
+    # ==================================================
+    print("\nTest with function f(a) = Dot(a,a+b)-Sin(Dot(a,b))")
+    print("\twhere b is a constant.")
+
+    def test_f4_hvp_partial(a, b, va):
+        z = dot(a, b)
+        hvp_a = 2 * va + sin(z) * b * dot(va, b)
+        return hvp_a,
+
+    a = MyTensor(np.random.randn(3))
+    b = MyTensor(np.random.randn(3))
+    va = MyTensor(np.random.randn(3))
+
+    hvp_a, = hvp_by_reverse_reverseAD(test_f4, [a, b], [va], inputs_vars=[a])
+    expected_hvp_a, = test_f4_hvp_partial(a, b, va)
+    match_hvp_a = np.allclose(hvp_a.value, expected_hvp_a.value)
+
+    print(f"HVP of a: {hvp_a}. Matches expected value: {match_hvp_a}")
+
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
     #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
