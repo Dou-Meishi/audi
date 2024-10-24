@@ -87,7 +87,7 @@ MyFunction.__call__ = my_func_tracker(MyFunction.__call__)
 class MyTensor(object):
     def __init__(self, value=0):
         self.value = np.asarray(value)
-        self.buffer = defaultdict(MyTensor)
+        self.buffer = defaultdict(self.default_grad)
 
     def __add__(self, other):
         if not isinstance(other, MyTensor):
@@ -217,6 +217,9 @@ class MyTensor(object):
     def as_row_vector(self):
         """From shape (n,) to (1, n)"""
         return self.unsqueeze(dim=0)
+
+    def default_grad(self):
+        return MyTensor(np.zeros_like(self.value))
 
     @property
     def shape(self):
