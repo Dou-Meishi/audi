@@ -979,6 +979,31 @@ def main():
     print(f"HVP of a: {hvp_x}. Matches expected value: {match_hvp_x}")
     print(f"HVP of a: {hvp_b}. Matches expected value: {match_hvp_b}")
 
+    # ==================================================
+    print("\nTest with function f(w) = BCEWithLogits(Xw, y)")
+    print("\twhere X and y are constants")
+
+    def test_f8(X, w, y):
+        return test_f6(X @ w, y)
+
+    def test_f8_hvp_partial(X, w, y, vw):
+        x = X @ w
+        s = 1 / (1 + exp(-x))
+        Omega = s * (1 - s)
+        v = X @ vw
+        return X.T @ (Omega * v),
+
+    X = MyTensor(np.random.randn(3, 4))
+    w = MyTensor(np.random.randn(4))
+    y = MyTensor(np.random.randn(3))
+    vw = MyTensor(np.random.randn(4))
+
+    hvp_w, = hvp_by_reverse_reverseAD(test_f8, [X, w, y], [vw], inputs_vars=[w])
+    expected_hvp_w, = test_f8_hvp_partial(X, w, y, vw)
+    match_hvp_w = np.allclose(hvp_w.value, expected_hvp_w.value)
+
+    print(f"HVP of w: {hvp_w}. Matches expected value: {match_hvp_w}")
+
     # examine computation history
     # for call_inputs, call_output, myfunc, kwargs in my_func_tracker.call_tape:
     #     print(f"Function: {myfunc.name} (with kwargs {kwargs})")
